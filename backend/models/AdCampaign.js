@@ -73,3 +73,4 @@ const adCampaignSchema = new mongoose.Schema({
 });
 
 export const AdCampaign = mongoose.model('AdCampaign', adCampaignSchema);
+
