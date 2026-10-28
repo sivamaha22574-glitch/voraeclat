@@ -113,11 +113,28 @@ export const CustomerAccountModal: React.FC<CustomerAccountModalProps> = ({
             Out for Delivery
           </span>
         );
+      case 'Delivery Pending':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-900 border border-orange-300">
+            <Clock className="w-3.5 h-3.5 text-orange-600" />
+            Delivery Pending
+          </span>
+        );
       case 'Shipped':
+      case 'Dispatched':
+      case 'In Transit':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-300">
             <Package className="w-3.5 h-3.5" />
-            Shipped
+            {status}
+          </span>
+        );
+      case 'Cancelled':
+      case 'Returned':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300">
+            <XCircle className="w-3.5 h-3.5" />
+            {status}
           </span>
         );
       default:
@@ -134,10 +151,16 @@ export const CustomerAccountModal: React.FC<CustomerAccountModalProps> = ({
     switch (status) {
       case 'Confirmed':
         return '25%';
+      case 'Packed':
+        return '40%';
+      case 'Dispatched':
       case 'Shipped':
-        return '55%';
+      case 'In Transit':
+        return '65%';
+      case 'Delivery Pending':
+        return '75%';
       case 'Out for Delivery':
-        return '82%';
+        return '88%';
       case 'Delivered':
         return '100%';
       default:

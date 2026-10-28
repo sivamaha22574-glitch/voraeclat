@@ -120,23 +120,90 @@ export interface OrderItem {
   color?: string;
 }
 
-export type OrderStatus = 'Confirmed' | 'Shipped' | 'Out for Delivery' | 'Delivered' | 'Cancelled';
+export type OrderStatus =
+  | 'Confirmed'
+  | 'Packed'
+  | 'Dispatched'
+  | 'In Transit'
+  | 'Shipped'
+  | 'Out for Delivery'
+  | 'Delivery Pending'
+  | 'Delivered'
+  | 'Cancelled'
+  | 'Returned';
+
+export type CourierPartner =
+  | 'Delhivery'
+  | 'BlueDart Express'
+  | 'DTDC'
+  | 'XpressBees'
+  | 'Shadowfax'
+  | 'Ekart Logistics'
+  | 'Self Delivery / Local Courier';
+
+export type PaymentMode =
+  | 'COD'
+  | 'UPI'
+  | 'Credit Card'
+  | 'Debit Card'
+  | 'Net Banking'
+  | 'Wallet'
+  | 'EMI';
+
+export type DeliveryPendingReason =
+  | 'Customer Unavailable'
+  | 'Incomplete Address / Wrong Address'
+  | 'Customer Requested Reschedule'
+  | 'Door / Gate Locked'
+  | 'Cash Not Ready'
+  | 'Customer Phone Unreachable'
+  | 'Bad Weather / Area Restriction'
+  | 'Entry Restricted by Society / Security'
+  | 'Package Refused by Customer'
+  | 'Other';
 
 export interface CustomerOrder {
   orderId: string;
+  invoiceNumber?: string;
   date: string;
   status: OrderStatus;
   expectedDelivery: string;
   trackingNumber: string;
+  awbNumber?: string;
+  courierPartner?: string;
+  courierContact?: string;
   deliveryAddress: {
     name: string;
     phone: string;
     address: string;
     city: string;
     pincode: string;
+    locality?: string;
+    state?: string;
+    landmark?: string;
   };
   items: OrderItem[];
+  subTotal?: number;
+  discountAmount?: number;
+  gstAmount?: number;
+  shippingFee?: number;
   totalAmount: number;
   paymentMethod: string;
+  paymentMode?: PaymentMode | string;
+  paymentStatus?: string;
+  isPaid?: boolean;
+  // Out for Delivery Telemetry
+  outForDeliveryAt?: string;
+  deliveryAgentName?: string;
+  deliveryAgentPhone?: string;
+  deliveryOtp?: string;
+  // Delivery Pending Telemetry
+  deliveryPendingReason?: DeliveryPendingReason | string;
+  deliveryAttemptsCount?: number;
+  rescheduledDeliveryDate?: string;
+  // Marketing & Ad attribution
+  adCampaignId?: string;
+  adCampaignName?: string;
+  adPlatform?: string;
 }
 

@@ -611,7 +611,36 @@ export async function submitPuppyCheckoutOrder(request: CheckoutOrderRequest): P
   error?: string;
 }> {
   try {
-    // Call the atomic backend RPC function
+    // 1. Sync order directly into MongoDB Backend API
+    try {
+      fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: request.orderId,
+          customerName: request.customerName,
+          customerMobile: request.customerPhone,
+          customerEmail: request.customerEmail,
+          deliveryAddress: {
+            name: request.customerName,
+            phone: request.customerPhone,
+            address: request.customerAddress,
+            city: request.customerCity,
+            pincode: request.customerPincode
+          },
+          items: request.items,
+          totalAmount: request.totalAmount,
+          paymentMode: request.paymentMethod,
+          paymentMethod: request.paymentMethod,
+          courierPartner: 'Delhivery',
+          status: 'Confirmed'
+        })
+      }).catch(err => console.warn('MongoDB order post note:', err));
+    } catch {
+      // ignore
+    }
+
+    // 2. Call the atomic Supabase RPC function
     const { data, error } = await supabase.rpc('create_puppy_checkout_order', {
       p_order_id: request.orderId,
       p_customer_name: request.customerName,
@@ -755,8 +784,29 @@ export async function insertPuppyOrderToSupabase(order: CustomerOrder): Promise<
 
 export async function updatePuppyOrderStatusInSupabase(
   orderId: string,
-  status: OrderStatus
+  status: OrderStatus,
+  extraData?: {
+    courierPartner?: string;
+    awbNumber?: string;
+    deliveryAgentName?: string;
+    deliveryAgentPhone?: string;
+    deliveryPendingReason?: string;
+    rescheduledDeliveryDate?: string;
+    paymentStatus?: string;
+  }
 ): Promise<boolean> {
+  // 1. Sync to MongoDB Backend API
+  try {
+    fetch(`/api/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, ...extraData })
+    }).catch(err => console.warn('MongoDB order status sync note:', err));
+  } catch {
+    // ignore
+  }
+
+  // 2. Sync to Supabase
   try {
     const { error } = await supabase
       .from('puppy_orders')

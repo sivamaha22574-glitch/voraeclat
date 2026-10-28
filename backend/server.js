@@ -15,6 +15,7 @@ import bannerRoutes from './routes/bannerRoutes.js';
 import leadRoutes from './routes/leadRoutes.js';
 import couponRoutes from './routes/couponRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
+import adRoutes from './routes/adRoutes.js';
 
 dotenv.config();
 
@@ -45,6 +46,7 @@ app.use('/api/banners', bannerRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/ads', adRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

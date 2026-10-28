@@ -14,6 +14,7 @@ const orderItemSchema = new mongoose.Schema({
 const addressSchema = new mongoose.Schema({
   name: { type: String, required: true },
   phone: { type: String, required: true },
+  alternatePhone: { type: String },
   email: { type: String },
   address: { type: String, required: true },
   locality: { type: String },
@@ -21,7 +22,9 @@ const addressSchema = new mongoose.Schema({
   state: { type: String, default: 'Maharashtra' },
   pincode: { type: String, required: true },
   landmark: { type: String },
-  gstin: { type: String }
+  addressType: { type: String, enum: ['Home', 'Office', 'Other'], default: 'Home' },
+  gstin: { type: String },
+  companyName: { type: String }
 }, { _id: false });
 
 const orderSchema = new mongoose.Schema({
@@ -37,14 +40,20 @@ const orderSchema = new mongoose.Schema({
     sparse: true,
     default: () => `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`
   },
+  invoiceDate: {
+    type: Date,
+    default: Date.now
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  // Customer Data
+
+  // 1. Customer Data
   customerName: { type: String, required: true },
   customerMobile: { type: String, required: true },
   customerEmail: { type: String },
+  customerAlternateMobile: { type: String },
 
   // Addresses (Shipping & Billing)
   deliveryAddress: { type: addressSchema, required: true },
@@ -53,30 +62,114 @@ const orderSchema = new mongoose.Schema({
   // Items
   items: [orderItemSchema],
 
-  // Billing & Financial Breakdown
+  // 2. Billing & Financial Breakdown
   subTotal: { type: Number, required: true },
   discountAmount: { type: Number, default: 0 },
   couponApplied: { type: String },
   gstAmount: { type: Number, default: 0 },
+  cgst: { type: Number, default: 0 },
+  sgst: { type: Number, default: 0 },
+  igst: { type: Number, default: 0 },
   shippingFee: { type: Number, default: 0 },
+  codFee: { type: Number, default: 0 },
   totalAmount: { type: Number, required: true },
 
-  // Payment Details
-  paymentMethod: { type: String, enum: ['COD', 'UPI', 'Credit/Debit Card', 'Net Banking', 'Wallet'], default: 'COD' },
-  paymentStatus: { type: String, enum: ['Pending', 'Paid', 'Failed', 'Refunded'], default: 'Pending' },
+  // 3. Payment Mode & Details
+  paymentMode: {
+    type: String,
+    enum: ['COD', 'UPI', 'Credit Card', 'Debit Card', 'Net Banking', 'Wallet', 'EMI'],
+    default: 'COD'
+  },
+  paymentMethod: { type: String, default: 'COD' },
+  paymentStatus: {
+    type: String,
+    enum: ['Pending', 'Paid', 'Failed', 'COD Pending Collection', 'COD Collected', 'Refunded'],
+    default: 'Pending'
+  },
   transactionId: { type: String },
   isPaid: { type: Boolean, default: false },
   paidAt: { type: Date },
+  codAmountToCollect: { type: Number, default: 0 },
+  codCollectionStatus: {
+    type: String,
+    enum: ['Not Applicable', 'Pending Collection', 'Collected by Delivery Agent', 'Remitted to Bank'],
+    default: 'Not Applicable'
+  },
 
-  // Shipment & Logistics Status
+  // 4. Courier & Logistics
+  courierPartner: {
+    type: String,
+    enum: ['Delhivery', 'BlueDart Express', 'DTDC', 'XpressBees', 'Shadowfax', 'Ekart Logistics', 'Self Delivery / Local Courier'],
+    default: 'Delhivery'
+  },
+  awbNumber: { type: String },
+  trackingNumber: { type: String },
+  trackingUrl: { type: String },
+  dispatchedAt: { type: Date },
+  courierContact: { type: String },
+  shippingWeightKg: { type: Number, default: 0.5 },
+  expectedDelivery: { type: String },
+
+  // 5. Order & Doorstep Delivery Statuses
   status: {
     type: String,
-    enum: ['Confirmed', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Returned'],
+    enum: [
+      'Confirmed',
+      'Packed',
+      'Dispatched',
+      'In Transit',
+      'Out for Delivery',
+      'Delivery Pending',
+      'Delivered',
+      'Cancelled',
+      'Returned',
+      'RTO'
+    ],
     default: 'Confirmed'
   },
-  expectedDelivery: { type: String },
-  trackingNumber: { type: String },
-  courierPartner: { type: String, default: 'BlueDart / Delhivery' },
+
+  // Out for Delivery Telemetry
+  outForDeliveryAt: { type: Date },
+  deliveryAgentName: { type: String },
+  deliveryAgentPhone: { type: String },
+  deliveryOtp: { type: String },
+
+  // Delivery Pending Telemetry
+  deliveryPendingReason: {
+    type: String,
+    enum: [
+      'Customer Unavailable',
+      'Incomplete Address / Wrong Address',
+      'Customer Requested Reschedule',
+      'Door / Gate Locked',
+      'Cash Not Ready',
+      'Customer Phone Unreachable',
+      'Bad Weather / Area Restriction',
+      'Entry Restricted by Society / Security',
+      'Package Refused by Customer',
+      'Other'
+    ]
+  },
+  deliveryAttemptsCount: { type: Number, default: 0 },
+  lastAttemptAt: { type: Date },
+  rescheduledDeliveryDate: { type: Date },
+  deliveredAt: { type: Date },
+
+  // 6. Ad & Marketing Campaign Attribution
+  adCampaignId: { type: String },
+  adCampaignName: { type: String },
+  adPlatform: {
+    type: String,
+    enum: ['Meta Ads', 'Instagram Reels', 'Google Search', 'Facebook', 'Influencer Collab', 'Organic', 'Direct', 'WhatsApp', 'Other'],
+    default: 'Organic'
+  },
+  utmSource: { type: String },
+  utmMedium: { type: String },
+  utmCampaign: { type: String },
+  utmContent: { type: String },
+  utmTerm: { type: String },
+
+  // Customer Notes
   customerNotes: { type: String }
 }, {
   timestamps: true
