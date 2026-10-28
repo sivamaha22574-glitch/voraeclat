@@ -1,0 +1,241 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-brand: 'Fredoka', cursive, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+/* Playful Animated Graphics Keyframes */
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1.5deg);
+  }
+}
+
+@keyframes float-reverse {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(8px) rotate(-1.5deg);
+  }
+}
+
+@keyframes rock-horse {
+  0%, 100% {
+    transform: rotate(-6deg);
+  }
+  50% {
+    transform: rotate(6deg);
+  }
+}
+
+@keyframes puff-smoke {
+  0% {
+    opacity: 0.8;
+    transform: translate(0, 0) scale(0.6);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translate(-10px, -14px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-20px, -26px) scale(1.4);
+  }
+}
+
+@keyframes spin-pinwheel {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ear-wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(10deg);
+  }
+}
+
+@keyframes bubble-drift {
+  0% {
+    transform: translateY(0px) translateX(0px) scale(0.9);
+  }
+  33% {
+    transform: translateY(-15px) translateX(6px) scale(1.02);
+  }
+  66% {
+    transform: translateY(-30px) translateX(-6px) scale(0.98);
+  }
+  100% {
+    transform: translateY(-45px) translateX(2px) scale(1.05);
+  }
+}
+
+@keyframes track-dash {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+
+.animate-float-gentle {
+  animation: float-gentle 4s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: float-reverse 4.5s ease-in-out infinite;
+}
+
+.animate-rock-horse {
+  transform-origin: 50% 90%;
+  animation: rock-horse 2.2s ease-in-out infinite;
+}
+
+.animate-spin-pinwheel {
+  transform-origin: 50% 50%;
+  animation: spin-pinwheel 6s linear infinite;
+}
+
+.animate-spin-pinwheel-fast {
+  transform-origin: 50% 50%;
+  animation: spin-pinwheel 1.2s linear infinite;
+}
+
+.animate-puff {
+  animation: puff-smoke 2s ease-out infinite;
+}
+
+.animate-bubble-drift {
+  animation: bubble-drift 5s ease-in-out infinite alternate;
+}
+
+.animate-track {
+  animation: track-dash 1.2s linear infinite;
+}
+
+/* Overall Website Theme Overrides */
+[data-theme="modern-dark"] .bg-white {
+  background-color: #111827 !important;
+  color: #f1f5f9 !important;
+  border-color: #1f2937 !important;
+}
+
+[data-theme="modern-dark"] .text-slate-900,
+[data-theme="modern-dark"] .text-slate-800,
+[data-theme="modern-dark"] .text-slate-700 {
+  color: #e2e8f0 !important;
+}
+
+[data-theme="modern-dark"] .text-slate-600,
+[data-theme="modern-dark"] .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+[data-theme="modern-dark"] .border-slate-200,
+[data-theme="modern-dark"] .border-slate-300 {
+  border-color: #334155 !important;
+}
+
+[data-theme="modern-dark"] .bg-slate-50 {
+  background-color: #0f172a !important;
+}
+
+[data-theme="modern-dark"] .bg-slate-100 {
+  background-color: #1e293b !important;
+}
+
+/* New Year Midnight Gala Theme Overrides */
+[data-theme="newyear-gala"] .bg-white {
+  background-color: #0f1d3f !important;
+  color: #fef08a !important;
+  border-color: #1e3a8a !important;
+}
+
+[data-theme="newyear-gala"] .text-slate-900,
+[data-theme="newyear-gala"] .text-slate-800,
+[data-theme="newyear-gala"] .text-slate-700 {
+  color: #fef9c3 !important;
+}
+
+[data-theme="newyear-gala"] .text-slate-600,
+[data-theme="newyear-gala"] .text-slate-500 {
+  color: #93c5fd !important;
+}
+
+[data-theme="newyear-gala"] .border-slate-200,
+[data-theme="newyear-gala"] .border-slate-300 {
+  border-color: #1e3a8a !important;
+}
+
+[data-theme="newyear-gala"] .bg-slate-50 {
+  background-color: #0b1329 !important;
+}
+
+[data-theme="newyear-gala"] .bg-slate-100 {
+  background-color: #172554 !important;
+}
+
+/* Global Mobile View & Scroll Utilities */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hero Carousel Container — Exact Fit for 1024x377 Banner */
+.hero-slider {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1024 / 377;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Banner image — preserve all content edge-to-edge with zero side bars */
+.hero-slider img,
+.hero-slider .hero-slide-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+@media (max-width: 768px) {
+  .hero-slider {
+    aspect-ratio: 1024 / 377;
+    height: auto;
+  }
+
+  .hero-slider img,
+  .hero-slider .hero-slide-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+  }
+}
+
+
+

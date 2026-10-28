@@ -1,0 +1,6 @@
+{
+  "name": "Voraeclat - Little Things, Big Dreams | Baby, Kids & Maternity Shopping",
+  "description": "Asia's premier online store for baby fashion, toddler wear, nursery gear, diapering, toys, and maternity essentials, featuring Voraeclat Club member perks and curated parent checklists.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
