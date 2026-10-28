@@ -23,6 +23,7 @@ import {
   Edit2,
 } from 'lucide-react';
 import { CustomerOrder, CustomerUser, OrderStatus } from '../types';
+import { TaxInvoiceModal } from './TaxInvoiceModal';
 
 interface CustomerAccountModalProps {
   isOpen: boolean;
@@ -48,6 +49,7 @@ export const CustomerAccountModal: React.FC<CustomerAccountModalProps> = ({
   const [activeTab, setActiveTab] = useState<'orders' | 'profile' | 'offers'>('orders');
   const [orderFilter, setOrderFilter] = useState<'all' | 'active' | 'delivered'>('all');
   const [selectedOrderForTracking, setSelectedOrderForTracking] = useState<CustomerOrder | null>(null);
+  const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<CustomerOrder | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   // Profile Edit State
@@ -441,13 +443,11 @@ export const CustomerAccountModal: React.FC<CustomerAccountModalProps> = ({
                       <div className="flex items-center gap-2 shrink-0">
                         <button
                           type="button"
-                          onClick={() => {
-                            alert(`Tax Invoice for Order #${order.orderId} downloaded successfully!`);
-                          }}
+                          onClick={() => setSelectedInvoiceOrder(order)}
                           className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                         >
                           <Download className="w-3.5 h-3.5 text-slate-500" />
-                          <span>Invoice</span>
+                          <span>View Invoice</span>
                         </button>
                         <button
                           type="button"
@@ -675,6 +675,13 @@ export const CustomerAccountModal: React.FC<CustomerAccountModalProps> = ({
           )}
         </div>
       </div>
+
+      {/* Official Tax Invoice Printable Modal */}
+      <TaxInvoiceModal
+        isOpen={Boolean(selectedInvoiceOrder)}
+        onClose={() => setSelectedInvoiceOrder(null)}
+        order={selectedInvoiceOrder}
+      />
     </div>
   );
 };

@@ -11,9 +11,11 @@ import {
   Calendar,
   Lock,
   Zap,
+  FileText,
 } from 'lucide-react';
 import { CartItem, CustomerUser, CustomerOrder } from '../types';
 import { submitPuppyCheckoutOrder } from '../lib/supabase';
+import { TaxInvoiceModal } from './TaxInvoiceModal';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -48,6 +50,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [trackingNumber, setTrackingNumber] = useState('');
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState('Expected delivery in 2-3 days');
+  const [lastPlacedOrder, setLastPlacedOrder] = useState<CustomerOrder | null>(null);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   // Form State with user or sensible defaults
   const [fullName, setFullName] = useState(customer?.name || 'Customer');
@@ -152,32 +156,34 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setTrackingNumber(tracking);
       setExpectedDeliveryDate(expected);
 
+      const placedOrder: CustomerOrder = {
+        orderId: confirmedId,
+        date:
+          response.date ||
+          new Date().toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        status: 'Confirmed',
+        expectedDelivery: expected,
+        trackingNumber: tracking,
+        deliveryAddress: {
+          name: fullName,
+          phone,
+          address,
+          city,
+          pincode,
+        },
+        items: orderItems,
+        totalAmount: finalTotal || 499,
+        paymentMethod: paymentMethodLabel,
+      };
+
+      setLastPlacedOrder(placedOrder);
       if (onOrderPlaced) {
-        const placedOrder: CustomerOrder = {
-          orderId: confirmedId,
-          date:
-            response.date ||
-            new Date().toLocaleDateString('en-IN', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
-          status: 'Confirmed',
-          expectedDelivery: expected,
-          trackingNumber: tracking,
-          deliveryAddress: {
-            name: fullName,
-            phone,
-            address,
-            city,
-            pincode,
-          },
-          items: orderItems,
-          totalAmount: finalTotal || 499,
-          paymentMethod: paymentMethodLabel,
-        };
         onOrderPlaced(placedOrder);
       }
 
@@ -632,6 +638,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
                 <button
                   type="button"
+                  onClick={() => setShowInvoiceModal(true)}
+                  className="w-full sm:w-auto px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-amber-300 font-black rounded-xl text-xs transition-colors cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                >
+                  <FileText className="w-4 h-4 text-amber-400" />
+                  <span>View &amp; Print Tax Invoice</span>
+                </button>
+                <button
+                  type="button"
                   onClick={onClose}
                   className="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition-colors cursor-pointer"
                 >
@@ -655,6 +669,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           )}
         </div>
       </div>
+
+      {/* Official Tax Invoice Modal */}
+      <TaxInvoiceModal
+        isOpen={showInvoiceModal}
+        onClose={() => setShowInvoiceModal(false)}
+        order={lastPlacedOrder}
+      />
     </div>
   );
 };

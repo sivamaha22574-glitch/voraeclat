@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { CustomerOrder, OrderStatus, CourierPartner, PaymentMode, DeliveryPendingReason } from '../../types';
 import { updatePuppyOrderStatusInSupabase } from '../../lib/supabase';
+import { TaxInvoiceModal } from '../TaxInvoiceModal';
 
 interface OrdersManagerTabProps {
   orders: CustomerOrder[];
@@ -61,6 +62,7 @@ export const OrdersManagerTab: React.FC<OrdersManagerTabProps> = ({
   const [filterPayment, setFilterPayment] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
 
   // Status Change Dialog or Immediate Update
   const handleStatusChange = (
@@ -594,17 +596,25 @@ export const OrdersManagerTab: React.FC<OrdersManagerTabProps> = ({
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => window.print()}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm"
+                  type="button"
+                  onClick={() => setIsInvoiceModalOpen(true)}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer shadow-sm transition-colors"
                 >
-                  <Printer className="w-4 h-4" />
-                  <span>Print Tax Invoice / Packing Slip</span>
+                  <Printer className="w-4 h-4 text-amber-400" />
+                  <span>View &amp; Print Official Tax Invoice</span>
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Printable Tax Invoice Modal */}
+      <TaxInvoiceModal
+        isOpen={isInvoiceModalOpen}
+        onClose={() => setIsInvoiceModalOpen(false)}
+        order={selectedOrder}
+      />
     </div>
   );
 };
