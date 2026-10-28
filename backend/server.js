@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { connectDB, isDbConnected } from './config/db.js';
+import { startSupabaseAutoSync } from './services/supabaseAutoSync.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 import productRoutes from './routes/productRoutes.js';
@@ -23,7 +24,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Connect to MongoDB
-connectDB();
+connectDB().then(() => {
+  startSupabaseAutoSync();
+});
 
 const app = express();
 
