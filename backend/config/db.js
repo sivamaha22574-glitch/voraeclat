@@ -14,6 +14,7 @@ export let isDbConnected = false;
 
 export const connectDB = async () => {
   const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/voraeclat';
+  console.log('[Connecting to URI]:', uri.replace(/:[^:]*@/, ':****@'));
   try {
     mongoose.set('bufferCommands', false);
     const conn = await mongoose.connect(uri, {
