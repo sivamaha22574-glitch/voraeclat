@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, Heart, Crown, ShoppingBag, Sparkles } from 'lucide-react';
+import { Star, Heart, Crown, ShoppingBag, Sparkles, Zap } from 'lucide-react';
 import { Product } from '../types';
 import { ProductIllustration } from './ProductIllustration';
 
@@ -8,6 +8,7 @@ interface ProductCardProps {
   isWishlisted: boolean;
   onToggleWishlist: (p: Product) => void;
   onAddToCart: (p: Product, size?: string, color?: { name: string; hex: string }) => void;
+  onBuyNow?: (p: Product) => void;
   onQuickView: (p: Product) => void;
   displaySubCategory?: string;
 }
@@ -17,6 +18,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   isWishlisted,
   onToggleWishlist,
   onAddToCart,
+  onBuyNow,
   onQuickView,
   displaySubCategory,
 }) => {
@@ -152,19 +154,37 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             </strong>
           </div>
 
-          {/* Quick Add to Bag CTA matching golden button */}
-          <button
-            type="button"
-            onClick={handleAdd}
-            className={`w-full py-2 sm:py-2.5 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-black transition-all shadow-xs flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
-              isAdded
-                ? 'bg-emerald-600 text-white'
-                : 'bg-amber-400 hover:bg-amber-500 active:scale-[0.99] text-slate-950'
-            }`}
-          >
-            <ShoppingBag className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isAdded ? 'text-white' : 'text-slate-950'}`} />
-            <span>{isAdded ? 'Added ✓' : 'Add to Bag'}</span>
-          </button>
+          {/* Dual Action CTAs: Add to Bag & Immediate Buy Now */}
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              onClick={handleAdd}
+              className={`py-2 px-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1 cursor-pointer border ${
+                isAdded
+                  ? 'bg-emerald-600 text-white border-emerald-600'
+                  : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-300'
+              }`}
+            >
+              <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
+              <span>{isAdded ? 'Added' : 'Bag'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onBuyNow) {
+                  onBuyNow(product);
+                } else {
+                  handleAdd(e);
+                }
+              }}
+              className="py-2 px-2.5 rounded-xl text-[11px] sm:text-xs font-black transition-all shadow-xs flex items-center justify-center gap-1 cursor-pointer bg-amber-400 hover:bg-amber-500 active:scale-[0.99] text-slate-950"
+            >
+              <Zap className="w-3.5 h-3.5 text-slate-950 shrink-0 fill-current" />
+              <span>BUY NOW</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

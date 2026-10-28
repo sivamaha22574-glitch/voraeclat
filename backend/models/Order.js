@@ -1,14 +1,14 @@
 import mongoose from 'mongoose';
 
 const orderItemSchema = new mongoose.Schema({
-  productId: { type: String, required: true },
-  productName: { type: String, required: true },
-  imageUrl: { type: String },
-  price: { type: Number, required: true },
+  productId: { type: String, required: true, default: 'PRD-DEFAULT' },
+  productName: { type: String, required: true, default: 'Voraeclat Product' },
+  imageUrl: { type: String, default: '/voraeclat-mark.png' },
+  price: { type: Number, required: true, default: 499 },
   originalPrice: { type: Number },
   quantity: { type: Number, required: true, default: 1 },
-  size: { type: String, required: true },
-  color: { type: String }
+  size: { type: String, default: 'Standard' },
+  color: { type: String, default: 'Standard' }
 }, { _id: false });
 
 const addressSchema = new mongoose.Schema({

@@ -1626,6 +1626,10 @@ export default function App() {
                       isWishlisted={wishlist.some((p) => p.id === product.id)}
                       onToggleWishlist={handleToggleWishlist}
                       onAddToCart={handleAddToCart}
+                      onBuyNow={(p) => {
+                        handleAddToCart(p, p.sizes[0] || 'Standard', p.colors[0]);
+                        setIsCheckoutOpen(true);
+                      }}
                       onQuickView={(p) => setQuickViewProduct(p)}
                     />
                   ))}

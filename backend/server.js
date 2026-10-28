@@ -87,7 +87,14 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`[Voraeclat Backend] Live on port ${PORT}`);
   console.log(`[Admin Portal] Direct access at: http://localhost:${PORT}/#admin`);
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`[Notice] Port ${PORT} was already in use. Please restart your terminal or kill the old process.`);
+    process.exit(1);
+  }
 });

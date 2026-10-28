@@ -71,7 +71,18 @@ export const createOrder = async (req, res) => {
       year: 'numeric'
     });
 
-    const computedSubTotal = subTotal || items.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0);
+    const normalizedItems = (items || []).map((it) => ({
+      productId: it.productId || it.id || 'PRD-DEFAULT',
+      productName: it.productName || it.name || 'Voraeclat Product',
+      imageUrl: it.imageUrl || '/voraeclat-mark.png',
+      price: Number(it.price) || 499,
+      quantity: Number(it.quantity) || 1,
+      size: it.size || 'Standard',
+      color: it.color || 'Standard',
+      originalPrice: it.originalPrice || it.price
+    }));
+
+    const computedSubTotal = subTotal || normalizedItems.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0);
     const computedTotal = totalAmount || (computedSubTotal - discountAmount + gstAmount + shippingFee + codFee);
     let rawPaymentMode = paymentMode || paymentMethod || 'COD';
     let chosenPaymentMode = 'COD';
@@ -100,7 +111,7 @@ export const createOrder = async (req, res) => {
       customerAlternateMobile,
       deliveryAddress: finalDeliveryAddress,
       billingAddress: billingAddress || finalDeliveryAddress,
-      items,
+      items: normalizedItems,
       subTotal: computedSubTotal,
       discountAmount,
       couponApplied,
