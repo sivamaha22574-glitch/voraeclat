@@ -1,0 +1,43 @@
+[
+  {
+    "customId": "ps-101",
+    "name": "Pure Organic Cotton Baby Romper",
+    "brand": "Voraeclat Pure",
+    "categoryId": "baby-toddler",
+    "categoryName": "Baby & Toddler",
+    "subCategory": "Rompers & Sleepsuits",
+    "price": 599,
+    "originalPrice": 1199,
+    "discountPercent": 50,
+    "clubPrice": 499,
+    "rating": 4.8,
+    "reviewCount": 128,
+    "ageGroup": ["0-3M", "3-6M", "6-12M"],
+    "gender": "unisex",
+    "inStock": true,
+    "sizes": ["0-3M", "3-6M", "6-12M"],
+    "description": "100% GOTS certified organic combed cotton romper.",
+    "imageUrl": "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    "customId": "ps-102",
+    "name": "Festive Embroidered Silk Kurta Pajama Set",
+    "brand": "Voraeclat Royal",
+    "categoryId": "festive-ethnic",
+    "categoryName": "Festive & Ethnic",
+    "subCategory": "Boys Kurta Pajama",
+    "price": 1499,
+    "originalPrice": 2499,
+    "discountPercent": 40,
+    "clubPrice": 1299,
+    "rating": 4.9,
+    "reviewCount": 94,
+    "ageGroup": ["1-2Y", "2-4Y", "4-6Y"],
+    "gender": "boy",
+    "inStock": true,
+    "sizes": ["1-2Y", "2-4Y", "4-6Y"],
+    "description": "Exquisite banarasi chanderi silk blend kurta with comfortable cotton lining.",
+    "imageUrl": "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?auto=format&fit=crop&w=600&q=80"
+  }
+]
+
