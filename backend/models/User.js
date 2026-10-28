@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema({
 
   // Voraeclat Club Membership
   isClubMember: { type: Boolean, default: false },
-  clubTier: { type: String, enum: ['Standard', 'Silver', 'Gold', 'VIP'], default: 'Standard' },
+  clubTier: { type: String, enum: ['Standard', 'Silver', 'Gold', 'Platinum', 'VIP'], default: 'Standard' },
   clubExpiry: { type: Date },
 
   // Customer Shopping Analytics

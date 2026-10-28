@@ -384,7 +384,7 @@ const sampleCoupons = [
     code: 'PUPPY500',
     title: 'Flat ₹500 Off Mega Club Voucher',
     description: 'Exclusive club savings on orders above ₹2,499',
-    discountType: 'flat',
+    discountType: 'fixed',
     discountValue: 500,
     minCartValue: 2499,
     maxDiscount: 500,

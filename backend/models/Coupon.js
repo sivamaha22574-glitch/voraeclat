@@ -4,7 +4,7 @@ const couponSchema = new mongoose.Schema({
   code: { type: String, required: true, unique: true, uppercase: true, trim: true },
   title: { type: String, required: true },
   description: { type: String },
-  discountType: { type: String, enum: ['percentage', 'fixed'], default: 'percentage' },
+  discountType: { type: String, enum: ['percentage', 'fixed', 'flat'], default: 'percentage' },
   discountValue: { type: Number, required: true },
   minCartValue: { type: Number, default: 0 },
   maxDiscount: { type: Number },
