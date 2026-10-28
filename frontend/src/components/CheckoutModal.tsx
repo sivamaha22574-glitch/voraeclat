@@ -200,6 +200,44 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           )}
         </div>
 
+        {/* Step Navigation Tabs */}
+        {step !== 'confirmed' && (
+          <div className="flex border-b border-slate-200 bg-slate-100/90 p-2 gap-2 text-xs font-bold">
+            <button
+              type="button"
+              onClick={() => setStep('details')}
+              className={`flex-1 py-2 px-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                step === 'details'
+                  ? 'bg-white text-slate-950 shadow-sm border border-slate-200 font-black'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full text-[11px] flex items-center justify-center font-black ${
+                step === 'details' ? 'bg-slate-900 text-white' : 'bg-slate-300 text-slate-700'
+              }`}>1</span>
+              <span>1. Delivery Address</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSubmitError(null);
+                setStep('payment');
+              }}
+              className={`flex-1 py-2 px-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                step === 'payment'
+                  ? 'bg-white text-slate-950 shadow-sm border border-slate-200 font-black ring-1 ring-amber-400'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-white/60'
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full text-[11px] flex items-center justify-center font-black ${
+                step === 'payment' ? 'bg-amber-500 text-slate-950' : 'bg-amber-200 text-amber-950'
+              }`}>2</span>
+              <span>2. Payment Mode ({paymentMethodLabel})</span>
+            </button>
+          </div>
+        )}
+
         {/* Multi-Step Body */}
         <div className="p-6 max-h-[80vh] overflow-y-auto">
           {step === 'details' && (
@@ -622,12 +660,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 {isSubmitting ? (
                   <>
                     <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                    <span>Processing with Supabase Cloud...</span>
+                    <span>Placing Order & Syncing to Cloud...</span>
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="w-5 h-5" />
-                    <span>Place Order (₹{finalTotal.toLocaleString('en-IN')})</span>
+                    <span>Place Order via {paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : paymentMethod === 'upi' ? 'UPI' : paymentMethod === 'card' ? 'Card' : 'NetBanking'} (₹{finalTotal.toLocaleString('en-IN')})</span>
                   </>
                 )}
               </button>
