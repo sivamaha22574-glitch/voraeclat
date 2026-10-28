@@ -107,13 +107,122 @@ export const TaxInvoiceModal: React.FC<TaxInvoiceModalProps> = ({ isOpen, onClos
 
   const paymentLabel = order.paymentMode || order.paymentMethod || 'Cash on Delivery (COD)';
 
+  // Isolated Iframe Print: Guarantees ONLY the Tax Invoice is printed (no background page or modals)
   const handlePrint = () => {
-    window.print();
+    const invoiceElem = document.getElementById('printable-tax-invoice');
+    if (!invoiceElem) {
+      window.print();
+      return;
+    }
+
+    // Collect all stylesheets from the document for Tailwind styling
+    let stylesHtml = '';
+    document.querySelectorAll('link[rel="stylesheet"], style').forEach((node) => {
+      stylesHtml += node.outerHTML;
+    });
+
+    const iframe = document.createElement('iframe');
+    iframe.id = 'invoice-print-frame';
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) {
+      window.print();
+      return;
+    }
+
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <title>Invoice_${order.orderId}</title>
+          ${stylesHtml}
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 8mm 12mm;
+            }
+            * {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              color-adjust: exact !important;
+              box-sizing: border-box;
+            }
+            html, body {
+              background: #ffffff !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 100% !important;
+              font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+            }
+            #printable-tax-invoice {
+              width: 100% !important;
+              max-width: 100% !important;
+              margin: 0 auto !important;
+              box-shadow: none !important;
+              border: none !important;
+            }
+          </style>
+        </head>
+        <body>
+          ${invoiceElem.outerHTML}
+        </body>
+      </html>
+    `);
+    doc.close();
+
+    setTimeout(() => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      setTimeout(() => {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
+      }, 2000);
+    }, 350);
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto">
-      {/* Floating Action Bar (Hidden on Print) */}
+    <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto">
+      {/* Global CSS to ensure only the invoice is printed even if user presses Ctrl+P */}
+      <style>{`
+        @media print {
+          body > *:not(#printable-tax-invoice-container) {
+            display: none !important;
+          }
+          #printable-tax-invoice-container {
+            display: block !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+          }
+          #printable-tax-invoice {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-shadow: none !important;
+            border: none !important;
+            margin: 0 !important;
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
+      `}</style>
+
+      {/* Floating Action Bar */}
       <div className="fixed top-3 sm:top-5 z-60 flex items-center gap-2 bg-slate-900/90 text-white backdrop-blur-md px-4 py-2 rounded-full shadow-2xl border border-slate-700/60 print:hidden">
         <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5 mr-2">
           <FileText className="w-3.5 h-3.5" />
@@ -137,8 +246,12 @@ export const TaxInvoiceModal: React.FC<TaxInvoiceModalProps> = ({ isOpen, onClos
         </button>
       </div>
 
-      {/* Modern Graphic Invoice Canvas matching Reference Image */}
-      <div className="bg-white text-slate-900 rounded-none max-w-3xl w-full my-12 print:my-0 shadow-2xl border border-slate-200 overflow-hidden relative print:shadow-none print:border-none print:w-full font-sans text-xs">
+      {/* Modern Graphic Invoice Canvas */}
+      <div id="printable-tax-invoice-container" className="max-w-3xl w-full my-12 print:my-0">
+        <div
+          id="printable-tax-invoice"
+          className="bg-white text-slate-900 rounded-none w-full shadow-2xl border border-slate-200 overflow-hidden relative font-sans text-xs"
+        >
         {/* ======================================================== */}
         {/* TOP GEOMETRIC HEADER (Navy + Dynamic Amber Angled Slices) */}
         {/* ======================================================== */}
@@ -420,5 +533,6 @@ export const TaxInvoiceModal: React.FC<TaxInvoiceModalProps> = ({ isOpen, onClos
         </div>
       </div>
     </div>
+  </div>
   );
 };
