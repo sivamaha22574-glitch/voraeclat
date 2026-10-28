@@ -112,6 +112,13 @@ export async function savePersistentBanners(banners: SiteBanner[]): Promise<void
   Promise.all(
     banners.map((b, idx) => upsertPuppyBannerToSupabase(b, idx))
   ).catch((err) => console.warn('Supabase banner sync error:', err));
+
+  // 6. Sync to MongoDB Backend API
+  fetch('/api/banners', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(banners)
+  }).catch((err) => console.warn('MongoDB banner sync error:', err));
 }
 
 /**

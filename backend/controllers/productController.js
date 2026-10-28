@@ -115,11 +115,26 @@ export const getProductById = async (req, res) => {
   }
 };
 
-// @desc    Create new product
+// @desc    Create new product or bulk sync products
 // @route   POST /api/products
-// @access  Private/Admin
+// @access  Public / Admin
 export const createProduct = async (req, res) => {
   try {
+    if (Array.isArray(req.body)) {
+      if (isDbConnected) {
+        for (const item of req.body) {
+          const id = item.customId || item.id;
+          await Product.findOneAndUpdate(
+            { $or: [{ customId: id }, ...(id && id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])] },
+            item,
+            { upsert: true, new: true }
+          );
+        }
+      }
+      inMemoryProducts = req.body;
+      return res.status(201).json({ success: true, count: req.body.length });
+    }
+
     if (isDbConnected) {
       const product = await Product.create(req.body);
       return res.status(201).json({ success: true, data: product });

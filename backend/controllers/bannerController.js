@@ -36,11 +36,26 @@ export const getBanners = async (req, res) => {
   }
 };
 
-// @desc    Create new banner
+// @desc    Create new banner or bulk sync banners
 // @route   POST /api/banners
-// @access  Private/Admin
+// @access  Public / Admin
 export const createBanner = async (req, res) => {
   try {
+    if (Array.isArray(req.body)) {
+      if (isDbConnected) {
+        for (const b of req.body) {
+          const id = b.customId || b.id;
+          await Banner.findOneAndUpdate(
+            { $or: [{ customId: id }, ...(id && id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])] },
+            b,
+            { upsert: true, new: true }
+          );
+        }
+      }
+      inMemoryBanners = req.body;
+      return res.status(201).json({ success: true, count: req.body.length });
+    }
+
     if (isDbConnected) {
       const banner = await Banner.create(req.body);
       return res.status(201).json({ success: true, data: banner });
