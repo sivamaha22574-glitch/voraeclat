@@ -162,26 +162,14 @@ export const TaxInvoiceModal: React.FC<TaxInvoiceModalProps> = ({ isOpen, onClos
           />
 
           <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            {/* Left: Brand Logo & Slogan */}
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-2.5">
-                <img
-                  src="/voraeclat-mark.png"
-                  alt="Voraeclat"
-                  className="h-9 w-auto object-contain brightness-0 invert"
-                  onError={(e) => {
-                    (e.target as HTMLElement).style.display = 'none';
-                  }}
-                />
-                <div>
-                  <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white uppercase leading-none font-sans">
-                    VORAECLAT
-                  </h1>
-                  <p className="text-[10px] tracking-[0.22em] text-slate-300 font-semibold uppercase mt-0.5">
-                    LITTLE THINGS, BIG DREAMS
-                  </p>
-                </div>
-              </div>
+            {/* Left: Official Voraeclat Brand Artwork Logo */}
+            <div className="flex items-center">
+              <img
+                src="/voraeclat-logo-art.png"
+                alt="Voraeclat - Little Things, Big Dreams"
+                className="h-16 sm:h-20 w-auto object-contain filter drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] select-none"
+                loading="eager"
+              />
             </div>
 
             {/* Right: INVOICE & ID NO Title */}
