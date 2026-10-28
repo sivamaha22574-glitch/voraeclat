@@ -49,6 +49,17 @@ export const createOrder = async (req, res) => {
 
     const orderId = req.body.orderId || `ORD-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
     const invoiceNumber = `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const finalMobile = customerMobile || req.body.customerPhone || (deliveryAddress && deliveryAddress.phone) || '+91 9999999999';
+    const finalName = customerName || (deliveryAddress && deliveryAddress.name) || 'Customer';
+    const finalEmail = customerEmail || req.body.customerEmail || (deliveryAddress && deliveryAddress.email) || '';
+
+    const finalDeliveryAddress = deliveryAddress || {
+      name: finalName,
+      phone: finalMobile,
+      address: req.body.customerAddress || 'Address not provided',
+      city: req.body.customerCity || 'Mumbai',
+      pincode: req.body.customerPincode || '400001'
+    };
     const finalTracking = trackingNumber || `DLV-${Math.floor(100000000 + Math.random() * 900000000)}`;
     const finalAwb = awbNumber || `AWB-${Math.floor(10000000 + Math.random() * 90000000)}`;
 
@@ -62,7 +73,20 @@ export const createOrder = async (req, res) => {
 
     const computedSubTotal = subTotal || items.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0);
     const computedTotal = totalAmount || (computedSubTotal - discountAmount + gstAmount + shippingFee + codFee);
-    const chosenPaymentMode = paymentMode || paymentMethod || 'COD';
+    let rawPaymentMode = paymentMode || paymentMethod || 'COD';
+    let chosenPaymentMode = 'COD';
+    if (rawPaymentMode.toUpperCase().includes('COD') || rawPaymentMode.toUpperCase().includes('CASH')) {
+      chosenPaymentMode = 'COD';
+    } else if (rawPaymentMode.toUpperCase().includes('UPI')) {
+      chosenPaymentMode = 'UPI';
+    } else if (rawPaymentMode.toUpperCase().includes('CARD')) {
+      chosenPaymentMode = 'Credit Card';
+    } else if (rawPaymentMode.toUpperCase().includes('NETBANKING') || rawPaymentMode.toUpperCase().includes('NET BANKING')) {
+      chosenPaymentMode = 'Net Banking';
+    } else if (rawPaymentMode.toUpperCase().includes('WALLET')) {
+      chosenPaymentMode = 'Wallet';
+    }
+
     const isPrepaid = chosenPaymentMode !== 'COD';
 
     const order = await Order.create({
@@ -70,12 +94,12 @@ export const createOrder = async (req, res) => {
       invoiceNumber,
       invoiceDate: new Date(),
       user: req.user ? req.user._id : undefined,
-      customerMobile,
-      customerName,
-      customerEmail,
+      customerMobile: finalMobile,
+      customerName: finalName,
+      customerEmail: finalEmail,
       customerAlternateMobile,
-      deliveryAddress,
-      billingAddress: billingAddress || deliveryAddress,
+      deliveryAddress: finalDeliveryAddress,
+      billingAddress: billingAddress || finalDeliveryAddress,
       items,
       subTotal: computedSubTotal,
       discountAmount,
