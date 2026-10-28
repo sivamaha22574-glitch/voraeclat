@@ -363,12 +363,6 @@ export const TaxInvoiceModal: React.FC<TaxInvoiceModalProps> = ({ isOpen, onClos
                   <span className="text-slate-500 w-20">Order ID:</span>
                   <span className="font-mono font-bold text-amber-700">{order.orderId}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-slate-500 w-20">Courier / AWB:</span>
-                  <span className="font-mono text-slate-800">
-                    {order.awbNumber || order.trackingNumber || `DLV-${order.orderId.replace(/\D/g, '')}IN`}
-                  </span>
-                </div>
               </div>
             </div>
 
