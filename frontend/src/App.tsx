@@ -105,16 +105,20 @@ export default function App() {
   });
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
 
-  // Hash Routing Listener for Admin Portal & Direct Links
+  // Hash & Direct Routing Listener for Admin Portal & Direct Links + Secret Shortcut (Ctrl+Shift+A)
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.toLowerCase();
+      const pathname = window.location.pathname.toLowerCase();
+      const search = window.location.search.toLowerCase();
       if (
         hash.startsWith('#admin') ||
         hash.startsWith('#dashboard') ||
         hash.startsWith('#ads') ||
         hash.startsWith('#ad-dashboard') ||
-        hash.startsWith('#campaigns')
+        hash.startsWith('#campaigns') ||
+        pathname === '/admin' ||
+        search.includes('admin=true')
       ) {
         setCurrentPage('admin');
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -127,9 +131,29 @@ export default function App() {
       }
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Secret Admin Hotkey: Ctrl + Shift + A (or Cmd + Shift + A)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setCurrentPage((prev) => {
+          const next = prev === 'admin' ? 'home' : 'admin';
+          window.location.hash = next === 'admin' ? '#admin' : '#home';
+          return next;
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
     handleHashChange();
     window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleHashChange);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handleHashChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   // Warm up and sync site banners from IndexedDB on initial boot

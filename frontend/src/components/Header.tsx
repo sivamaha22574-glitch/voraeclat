@@ -488,22 +488,7 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* Admin Portal & Ad Dashboard Quick Access Button */}
-            {onOpenAdmin && (
-              <button
-                type="button"
-                onClick={onOpenAdmin}
-                className={`inline-flex items-center justify-center p-1.5 sm:px-3 sm:py-1.5 rounded-full text-xs font-black transition-all cursor-pointer border shrink-0 ${
-                  currentPage === 'admin'
-                    ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-sm'
-                    : 'bg-slate-900 hover:bg-slate-800 text-amber-300 hover:text-white border-slate-700 shadow-2xs'
-                }`}
-                title="Open Executive Admin Portal & Ad Dashboard"
-              >
-                <ShieldCheck className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-amber-400" />
-                <span className="hidden sm:inline sm:ml-1">Admin</span>
-              </button>
-            )}
+            {/* Admin Portal Quick Access Button - Hidden in storefront as requested (accessible via #admin or Ctrl+Shift+A) */}
 
             {/* Wishlist */}
             <button

@@ -379,18 +379,7 @@ export const MobileMenuDrawer: React.FC<MobileMenuDrawerProps> = ({
             )}
           </div>
 
-          {onOpenAdmin && (
-            <button
-              onClick={() => {
-                onOpenAdmin();
-                onClose();
-              }}
-              className="w-full py-2 bg-slate-900 text-amber-300 hover:bg-slate-800 rounded-lg border border-slate-700 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-              <span>Admin &amp; Ad Dashboard</span>
-            </button>
-          )}
+          {/* Admin access hidden in storefront (accessible via #admin or Ctrl+Shift+A) */}
 
           {onOpenThemeModal && (
             <button
