@@ -166,7 +166,47 @@ export async function loadPersistentBanners(): Promise<SiteBanner[]> {
     // fallback
   }
 
-  // 3. Fallback to Supabase cloud if local store is uninitialized
+  // 3. Fallback to MongoDB Backend API
+  try {
+    const res = await fetch('/api/banners');
+    if (res.ok) {
+      const json = await res.json();
+      if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
+        const mongoBanners: SiteBanner[] = json.data.map((b: any) => ({
+          id: b.customId || b.id || b._id,
+          name: b.name,
+          location: b.location,
+          group: b.group,
+          badge: b.badge || '',
+          title: b.title,
+          underText: b.underText || '',
+          imageUrl: b.imageUrl,
+          buttonText: b.buttonText || 'Shop Now',
+          buttonLink: b.buttonLink,
+          priceTag: b.priceTag,
+          originalPriceTag: b.originalPriceTag,
+          discountTag: b.discountTag,
+          couponCode: b.couponCode,
+          styleHighlights: b.styleHighlights,
+          accentColor: b.accentColor,
+          objectPosition: b.objectPosition,
+          fitMode: b.fitMode,
+          isActive: b.active ?? b.isActive,
+        }));
+        setCachedSiteBanners(mongoBanners);
+        try {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(mongoBanners));
+        } catch {
+          // ignore
+        }
+        return mongoBanners;
+      }
+    }
+  } catch (err) {
+    // fallback
+  }
+
+  // 4. Fallback to Supabase cloud if local store is uninitialized
   try {
     const remoteBanners = await fetchPuppyBannersFromSupabase();
     if (remoteBanners && remoteBanners.length > 0) {

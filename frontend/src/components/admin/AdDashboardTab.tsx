@@ -181,23 +181,27 @@ export const AdDashboardTab: React.FC<AdDashboardTabProps> = ({ onNotify }) => {
   const [editingBanner, setEditingBanner] = useState<SiteBanner | null>(null);
   const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
 
-  // Hero Stability & Display Mode State
-  const [heroAutoplay, setHeroAutoplay] = useState<boolean>(() => getHeroAutoplayEnabled());
+  // Hero Stability & Display Mode State (Always Stable - Auto-rotation removed)
+  const [heroAutoplay, setHeroAutoplay] = useState<boolean>(false);
   const [activeHeroIndex, setActiveHeroIndex] = useState<number>(() => getActiveHeroSlideIndex());
 
-  const handleToggleHeroAutoplay = (enabled: boolean) => {
-    setHeroAutoplay(enabled);
-    setHeroAutoplayEnabled(enabled);
-    onNotify(
-      enabled
-        ? 'Hero slideshow will auto-change every 5.5 seconds.'
-        : 'Hero image LOCKED in STABLE mode. Photos will NOT change without your permission.'
-    );
+  const handleToggleHeroAutoplay = (_enabled: boolean) => {
+    setHeroAutoplay(false);
+    setHeroAutoplayEnabled(false);
+    onNotify('Hero image is permanently locked in STABLE mode. Auto-change is disabled.');
   };
 
   const handleSetPrimaryHeroSlide = (heroId: string, idx: number) => {
     setActiveHeroIndex(idx);
     setActiveHeroSlideIndex(idx, heroId);
+    const updated = siteBanners.map((b) => {
+      if (b.group === 'hero') {
+        return { ...b, isActive: b.id === heroId };
+      }
+      return b;
+    });
+    setSiteBanners(updated);
+    saveStoredSiteBanners(updated);
     onNotify(`Hero Slide #${idx + 1} locked as the active stable storefront image!`);
   };
 
@@ -874,35 +878,16 @@ export const AdDashboardTab: React.FC<AdDashboardTabProps> = ({ onNotify }) => {
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                    {!heroAutoplay
-                      ? 'Hero image is locked in STABLE mode. Storefront will NEVER change images automatically without user permission.'
-                      : 'Hero image automatically advances to the next slide every 5.5s. Click below to lock into STABLE mode.'}
+                    Hero image is locked in STABLE mode. Storefront displays your selected active image statically with zero automatic changes.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => handleToggleHeroAutoplay(!heroAutoplay)}
-                  className={`px-4 py-2.5 rounded-xl font-black text-xs flex items-center gap-2 transition-all cursor-pointer shadow-md ${
-                    !heroAutoplay
-                      ? 'bg-amber-400 hover:bg-amber-300 text-slate-950'
-                      : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-600'
-                  }`}
-                >
-                  {!heroAutoplay ? (
-                    <>
-                      <Lock className="w-4 h-4" />
-                      <span>Mode: STABLE (Locked)</span>
-                    </>
-                  ) : (
-                    <>
-                      <RotateCcw className="w-4 h-4" />
-                      <span>Switch to STABLE Mode</span>
-                    </>
-                  )}
-                </button>
+                <div className="px-4 py-2.5 rounded-xl font-black text-xs flex items-center gap-2 shadow-md bg-amber-400 text-slate-950 border border-amber-300">
+                  <Lock className="w-4 h-4" />
+                  <span>Mode: STABLE (Locked)</span>
+                </div>
               </div>
             </div>
 
@@ -911,7 +896,7 @@ export const AdDashboardTab: React.FC<AdDashboardTabProps> = ({ onNotify }) => {
               {siteBanners
                 .filter((b) => b.group === 'hero')
                 .map((hero, index, heroArr) => {
-                  const isActiveOnStorefront = activeHeroIndex === index;
+                  const isActiveOnStorefront = activeHeroIndex === index || hero.isActive === true;
                   return (
                     <div
                       key={hero.id}

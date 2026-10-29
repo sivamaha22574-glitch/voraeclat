@@ -1,21 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck,
   RotateCcw,
   Truck,
   ChevronLeft,
   ChevronRight,
-  Lock,
-  Play,
-  Pause,
 } from 'lucide-react';
 import { CategoryId } from '../types';
 import {
   getStoredSiteBanners,
-  getHeroAutoplayEnabled,
-  setHeroAutoplayEnabled,
   getActiveHeroSlideIndex,
-  setActiveHeroSlideIndex,
 } from '../data/siteBanners';
 import { loadPersistentBanners } from '../data/bannerStorage';
 
@@ -41,6 +35,7 @@ interface BannerSlide {
   themeHue: string;
   objectPosition?: 'center' | 'top' | 'bottom';
   fitMode?: 'cover' | 'contain';
+  isActive?: boolean;
 }
 
 const buildHeroSlides = (fallbackSlides: BannerSlide[]): BannerSlide[] => {
@@ -76,6 +71,7 @@ const buildHeroSlides = (fallbackSlides: BannerSlide[]): BannerSlide[] => {
           themeHue: palette.hue,
           objectPosition: b.objectPosition || 'center',
           fitMode: b.fitMode || 'cover',
+          isActive: b.isActive,
         };
       });
     }
@@ -88,10 +84,7 @@ const buildHeroSlides = (fallbackSlides: BannerSlide[]): BannerSlide[] => {
 export const HeroBanner: React.FC<HeroBannerProps> = ({
   onSelectCategory,
 }) => {
-  const [autoPlay, setAutoPlay] = useState<boolean>(() => getHeroAutoplayEnabled());
   const [currentSlide, setCurrentSlide] = useState<number>(() => getActiveHeroSlideIndex());
-  const [isPaused, setIsPaused] = useState(false);
-  const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
 
   const fallbackSlides: BannerSlide[] = [
     {
@@ -190,11 +183,12 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   // Listen to custom events, storage, and broadcast channel for live banner updates
   useEffect(() => {
     const handleUpdate = () => {
-      setSlides(buildHeroSlides(fallbackSlides));
-    };
-
-    const handleAutoplayChange = (e: any) => {
-      setAutoPlay(e.detail ?? false);
+      const updated = buildHeroSlides(fallbackSlides);
+      setSlides(updated);
+      const activeIdx = updated.findIndex((s) => s.isActive);
+      if (activeIdx !== -1) {
+        setCurrentSlide(activeIdx);
+      }
     };
 
     const handleActiveSlideChange = (e: any) => {
@@ -213,7 +207,6 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
     window.addEventListener('site_banners_updated', handleUpdate);
     window.addEventListener('ad_campaigns_updated', handleUpdate);
     window.addEventListener('hero_banners_synced', handleUpdate);
-    window.addEventListener('hero_autoplay_changed', handleAutoplayChange);
     window.addEventListener('hero_active_slide_changed', handleActiveSlideChange);
 
     let bc: BroadcastChannel | null = null;
@@ -231,7 +224,6 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
       window.removeEventListener('site_banners_updated', handleUpdate);
       window.removeEventListener('ad_campaigns_updated', handleUpdate);
       window.removeEventListener('hero_banners_synced', handleUpdate);
-      window.removeEventListener('hero_autoplay_changed', handleAutoplayChange);
       window.removeEventListener('hero_active_slide_changed', handleActiveSlideChange);
       bc?.close();
     };
@@ -240,62 +232,33 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   const currentSlidesList = slides.length > 0 ? slides : fallbackSlides;
   const totalSlides = currentSlidesList.length;
 
-  // Ensure currentSlide stays within bounds
+  // Sync initial slide to active hero banner
   useEffect(() => {
-    if (currentSlide >= totalSlides) {
-      setCurrentSlide(0);
-      setActiveHeroSlideIndex(0);
+    const activeIdx = currentSlidesList.findIndex((s) => s.isActive);
+    if (activeIdx !== -1) {
+      setCurrentSlide(activeIdx);
+    } else {
+      const savedIdx = getActiveHeroSlideIndex();
+      if (savedIdx >= 0 && savedIdx < totalSlides) {
+        setCurrentSlide(savedIdx);
+      }
     }
-  }, [totalSlides, currentSlide]);
-
-  // Slideshow auto-advance: ONLY runs if autoPlay is explicitly turned ON by the user/admin!
-  // By default, autoPlay is FALSE (STABLE MODE): images do NOT change without user permission!
-  useEffect(() => {
-    if (!autoPlay || isPaused || totalSlides <= 1) {
-      if (autoPlayRef.current) clearInterval(autoPlayRef.current);
-      return;
-    }
-
-    autoPlayRef.current = setInterval(() => {
-      setCurrentSlide((prev) => {
-        const next = (prev + 1) % totalSlides;
-        const targetSlide = currentSlidesList[next];
-        setActiveHeroSlideIndex(next, targetSlide?.id);
-        return next;
-      });
-    }, 5500);
-
-    return () => {
-      if (autoPlayRef.current) clearInterval(autoPlayRef.current);
-    };
-  }, [autoPlay, isPaused, totalSlides, currentSlidesList]);
+  }, [slides, totalSlides]);
 
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const handlePrevSlide = () => {
     const next = currentSlide === 0 ? totalSlides - 1 : currentSlide - 1;
     setCurrentSlide(next);
-    const targetSlide = currentSlidesList[next];
-    setActiveHeroSlideIndex(next, targetSlide?.id);
   };
 
   const handleNextSlide = () => {
     const next = (currentSlide + 1) % totalSlides;
     setCurrentSlide(next);
-    const targetSlide = currentSlidesList[next];
-    setActiveHeroSlideIndex(next, targetSlide?.id);
   };
 
   const handleSelectDot = (idx: number) => {
     setCurrentSlide(idx);
-    const targetSlide = currentSlidesList[idx];
-    setActiveHeroSlideIndex(idx, targetSlide?.id);
-  };
-
-  const handleToggleAutoPlay = () => {
-    const next = !autoPlay;
-    setAutoPlay(next);
-    setHeroAutoplayEnabled(next);
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -322,8 +285,6 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
       <div
         className="hero-slider relative w-full overflow-hidden bg-slate-950 select-none cursor-pointer group"
         onClick={() => onSelectCategory(activeSlide.category)}
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -409,9 +370,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
           </>
         )}
 
-        {/* Minimal Clean Slide Dots & Stable Indicator at Bottom Center */}
-        <div className="absolute bottom-1.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2.5 bg-black/60 backdrop-blur-md px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full border border-white/20 shadow-xl">
-          {totalSlides > 1 && (
+        {/* Minimal Clean Slide Dots at Bottom Center */}
+        {totalSlides > 1 && (
+          <div className="absolute bottom-1.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2.5 bg-black/60 backdrop-blur-md px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full border border-white/20 shadow-xl">
             <div className="flex items-center gap-1 sm:gap-1.5">
               {currentSlidesList.map((s, idx) => (
                 <button
@@ -429,39 +390,8 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                 />
               ))}
             </div>
-          )}
-
-          {/* User Permission Stable / Auto-Slide Toggle Button */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleToggleAutoPlay();
-            }}
-            className={`flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all border cursor-pointer ${
-              !autoPlay
-                ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-xs hover:bg-amber-300'
-                : 'bg-white/15 text-white/90 border-white/20 hover:bg-white/25'
-            }`}
-            title={
-              !autoPlay
-                ? 'Hero image is STABLE (locked). It will not change without your permission. Click if you want to turn on auto-slide.'
-                : 'Slideshow is auto-changing. Click to lock hero image in stable mode.'
-            }
-          >
-            {!autoPlay ? (
-              <>
-                <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-950 shrink-0" />
-                <span>Stable</span>
-              </>
-            ) : (
-              <>
-                <RotateCcw className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-300 shrink-0 animate-spin" style={{ animationDuration: '6s' }} />
-                <span>Auto</span>
-              </>
-            )}
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* 2. Value Guarantees Strip below the Hero Banner - Compact 3-Column on Mobile */}

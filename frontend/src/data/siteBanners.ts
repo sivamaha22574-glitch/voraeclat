@@ -19,6 +19,7 @@ export interface SiteBanner {
   accentColor?: string;
   objectPosition?: 'center' | 'top' | 'bottom';
   fitMode?: 'cover' | 'contain';
+  isActive?: boolean;
 }
 
 export interface ImageCompressionOptions {
@@ -335,21 +336,18 @@ export const setCachedSiteBanners = (banners: SiteBanner[]): void => {
 };
 
 /**
- * Check if hero slideshow is set to auto-advance.
- * Default is FALSE (STABLE MODE): images do NOT auto-change without user permission.
+ * Hero slideshow auto-advance:
+ * PERMANENTLY DISABLED (STABLE MODE).
+ * Images NEVER auto-change — only the user's uploaded & active image is displayed statically.
  */
 export const getHeroAutoplayEnabled = (): boolean => {
-  try {
-    return localStorage.getItem(HERO_AUTOPLAY_KEY) === 'true';
-  } catch {
-    return false;
-  }
+  return false;
 };
 
-export const setHeroAutoplayEnabled = (enabled: boolean): void => {
+export const setHeroAutoplayEnabled = (_enabled: boolean): void => {
   try {
-    localStorage.setItem(HERO_AUTOPLAY_KEY, enabled ? 'true' : 'false');
-    window.dispatchEvent(new CustomEvent('hero_autoplay_changed', { detail: enabled }));
+    localStorage.setItem(HERO_AUTOPLAY_KEY, 'false');
+    window.dispatchEvent(new CustomEvent('hero_autoplay_changed', { detail: false }));
   } catch {
     // ignore
   }
@@ -357,21 +355,57 @@ export const setHeroAutoplayEnabled = (enabled: boolean): void => {
 
 export const getActiveHeroSlideIndex = (): number => {
   try {
+    const banners = getStoredSiteBanners().filter((b) => b.group === 'hero');
+    if (!banners || banners.length === 0) return 0;
+
+    // 1. Explicit isActive flag on banner
+    const explicitIdx = banners.findIndex((b) => b.isActive === true);
+    if (explicitIdx !== -1) return explicitIdx;
+
+    // 2. Saved active heroId in localStorage
+    const activeId = localStorage.getItem(HERO_ACTIVE_ID_KEY);
+    if (activeId) {
+      const idIdx = banners.findIndex((b) => b.id === activeId);
+      if (idIdx !== -1) return idIdx;
+    }
+
+    // 3. Saved active index in localStorage
     const raw = localStorage.getItem(HERO_ACTIVE_SLIDE_KEY);
-    if (!raw) return 0;
-    const num = parseInt(raw, 10);
-    return isNaN(num) ? 0 : num;
+    if (raw) {
+      const num = parseInt(raw, 10);
+      if (!isNaN(num) && num >= 0 && num < banners.length) return num;
+    }
+
+    return 0;
   } catch {
     return 0;
   }
 };
 
-export const setActiveHeroSlideIndex = (index: number, heroId?: string): void => {
+export const setActiveHeroSlideIndex = (index: number, heroId?: string, persistBanners = true): void => {
   try {
     localStorage.setItem(HERO_ACTIVE_SLIDE_KEY, String(index));
     if (heroId) {
       localStorage.setItem(HERO_ACTIVE_ID_KEY, heroId);
     }
+
+    // Update isActive flag directly on siteBanners and persist across session and storage
+    if (persistBanners) {
+      const allBanners = getStoredSiteBanners();
+      const heroBanners = allBanners.filter((b) => b.group === 'hero');
+      const targetHero = heroId ? heroBanners.find((b) => b.id === heroId) : heroBanners[index];
+
+      if (targetHero) {
+        const updated = allBanners.map((b) => {
+          if (b.group === 'hero') {
+            return { ...b, isActive: b.id === targetHero.id };
+          }
+          return b;
+        });
+        saveStoredSiteBanners(updated);
+      }
+    }
+
     window.dispatchEvent(new CustomEvent('hero_active_slide_changed', { detail: { index, heroId } }));
   } catch {
     // ignore
