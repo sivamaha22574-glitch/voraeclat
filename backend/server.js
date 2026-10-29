@@ -50,8 +50,11 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/ads', adRoutes);
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
+// Health check endpoint (serves JSON to API clients, redirects browsers to the real website)
+app.get(['/api/health', '/api'], (req, res) => {
+  if (req.headers.accept && req.headers.accept.includes('text/html') && !req.xhr) {
+    return res.redirect('/');
+  }
   res.json({
     status: 'OK',
     server: 'Voraeclat MERN Backend',
