@@ -1,7 +1,7 @@
 # Netlify configuration for Voraeclat
 [build]
   command = "node scripts/build.mjs"
-  publish = "frontend/dist"
+  publish = "public"
 
 [[redirects]]
   from = "/*"
@@ -10,3 +10,4 @@
 
 [build.environment]
   NODE_VERSION = "20"
+
