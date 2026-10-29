@@ -89,14 +89,25 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`[Voraeclat Backend] Live on port ${PORT}`);
-  console.log(`[Admin Portal] Direct access at: http://localhost:${PORT}/#admin`);
-});
+const startServer = (port, retries = 5) => {
+  const server = app.listen(port, '0.0.0.0', () => {
+    console.log(`[Voraeclat Backend] Live on port ${port}`);
+    console.log(`[Admin Portal] Direct access at: http://localhost:${port}/#admin`);
+  });
 
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`[Notice] Port ${PORT} was already in use. Please restart your terminal or kill the old process.`);
-    process.exit(1);
-  }
-});
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      if (retries > 0) {
+        console.warn(`[Notice]: Port ${port} is releasing. Retrying in 1s (${retries} attempts left)...`);
+        setTimeout(() => startServer(port, retries - 1), 1000);
+      } else {
+        console.error(`[Notice]: Port ${port} was already in use. Please restart your terminal.`);
+        process.exit(1);
+      }
+    } else {
+      console.error('[Server Error]:', err);
+    }
+  });
+};
+
+startServer(PORT);
