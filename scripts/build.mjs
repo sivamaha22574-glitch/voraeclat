@@ -55,3 +55,4 @@ if (fs.existsSync(path.join(rootDir, 'backend'))) {
 }
 
 console.log('✅ Voraeclat build completed successfully for Netlify deployment!');
+
