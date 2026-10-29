@@ -158,15 +158,24 @@ let isSyncStarted = false;
 
 export function startSupabaseAutoSync() {
   if (isSyncStarted) return;
-  if (mongoose.connection.readyState !== 1) return;
   isSyncStarted = true;
 
   console.log('⚡ [AutoSync Service] Initializing Real-time Supabase-to-MongoDB Bridge...');
 
-  // Initial sync immediately
-  syncAllFromSupabase();
+  const runSync = async () => {
+    if (mongoose.connection.readyState === 1) {
+      await syncAllFromSupabase().catch(() => {});
+    }
+  };
 
-  // Listen to Realtime Postgres Changes
+  // Run initial sync immediately if connected, or as soon as connected event fires
+  if (mongoose.connection.readyState === 1) {
+    runSync();
+  } else {
+    mongoose.connection.once('connected', runSync);
+  }
+
+  // Listen to Realtime Postgres Changes from Supabase
   try {
     supabase
       .channel('realtime_puppy_orders')
@@ -175,7 +184,7 @@ export function startSupabaseAutoSync() {
         { event: '*', schema: 'public', table: 'puppy_orders' },
         async (payload) => {
           console.log(`⚡ [Realtime Order Event]: ${payload.eventType} for order #${payload.new?.order_id || payload.old?.order_id}`);
-          if (payload.new) {
+          if (payload.new && mongoose.connection.readyState === 1) {
             await syncOrderToMongo(payload.new);
             console.log(`✅ [AutoSync] Order #${payload.new.order_id} instantly updated in MongoDB Atlas!`);
           }
@@ -188,8 +197,8 @@ export function startSupabaseAutoSync() {
     console.warn('[AutoSync] Realtime subscription note:', e.message);
   }
 
-  // Periodic heartbeat polling every 10 seconds to guarantee 100% data consistency
+  // Periodic heartbeat polling every 5 seconds to guarantee 100% data consistency
   setInterval(() => {
-    syncAllFromSupabase().catch(() => {});
-  }, 10000);
+    runSync();
+  }, 5000);
 }

@@ -23,12 +23,9 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Connect to MongoDB
-connectDB().then((conn) => {
-  if (conn) {
-    startSupabaseAutoSync();
-  }
-});
+// Connect to MongoDB & Initialize Real-time Auto-Sync Bridge
+connectDB();
+startSupabaseAutoSync();
 
 const app = express();
 
