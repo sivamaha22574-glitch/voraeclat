@@ -6,7 +6,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { connectDB, isDbConnected } from './config/db.js';
-import { startSupabaseAutoSync } from './services/supabaseAutoSync.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 import productRoutes from './routes/productRoutes.js';
@@ -17,15 +16,15 @@ import leadRoutes from './routes/leadRoutes.js';
 import couponRoutes from './routes/couponRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import adRoutes from './routes/adRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Connect to MongoDB & Initialize Real-time Auto-Sync Bridge
+// Connect to MongoDB Atlas
 connectDB();
-startSupabaseAutoSync();
 
 const app = express();
 
@@ -49,6 +48,7 @@ app.use('/api/leads', leadRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/ads', adRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint (serves JSON to API clients, redirects browsers to the real website)
 app.get(['/api/health', '/api'], (req, res) => {

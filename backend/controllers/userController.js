@@ -146,3 +146,111 @@ export const updateUserProfile = async (req, res) => {
   }
 };
 
+// @desc    Get all registered customers
+// @route   GET /api/users
+// @access  Public / Admin
+export const getUsers = async (req, res) => {
+  try {
+    const users = await User.find({ role: { $ne: 'admin' } }).sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      count: users.length,
+      data: users.map((u) => ({
+        id: u._id,
+        name: u.name,
+        email: u.email,
+        mobile: u.mobile,
+        address: u.addresses?.[0]?.address || u.address || '',
+        city: u.addresses?.[0]?.city || u.city || '',
+        pincode: u.addresses?.[0]?.pincode || u.pincode || '',
+        isLoggedIn: true,
+        notifyOffers: u.notifyOffers,
+        joinedDate: u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '',
+        totalOrders: u.totalOrders || 0,
+        totalSpent: u.totalSpent || 0,
+        clubTier: u.clubTier || 'Standard',
+        isClubMember: u.isClubMember || false
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get customer by phone
+// @route   GET /api/users/phone/:phone
+// @access  Public
+export const getUserByPhone = async (req, res) => {
+  try {
+    const cleanPhone = decodeURIComponent(req.params.phone).trim();
+    const user = await User.findOne({
+      $or: [
+        { mobile: cleanPhone },
+        { mobile: cleanPhone.replace(/\s+/g, '') },
+        { mobile: cleanPhone.startsWith('+91') ? cleanPhone.replace('+91', '').trim() : `+91 ${cleanPhone}` }
+      ]
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        address: user.addresses?.[0]?.address || user.address || '',
+        city: user.addresses?.[0]?.city || user.city || '',
+        pincode: user.addresses?.[0]?.pincode || user.pincode || '',
+        isLoggedIn: true,
+        notifyOffers: user.notifyOffers,
+        joinedDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '',
+        totalOrders: user.totalOrders || 0,
+        totalSpent: user.totalSpent || 0,
+        clubTier: user.clubTier || 'Standard',
+        isClubMember: user.isClubMember || false
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Upsert customer details
+// @route   POST /api/users/upsert
+// @access  Public
+export const upsertCustomer = async (req, res) => {
+  try {
+    const { mobile, name, email, address, city, pincode, notifyOffers } = req.body;
+    if (!mobile) {
+      return res.status(400).json({ success: false, message: 'Mobile number is required' });
+    }
+
+    const cleanMobile = mobile.trim();
+    const updateDoc = {
+      $set: {
+        ...(name ? { name } : {}),
+        ...(email ? { email } : {}),
+        ...(address ? { address } : {}),
+        ...(city ? { city } : {}),
+        ...(pincode ? { pincode } : {}),
+        ...(notifyOffers !== undefined ? { notifyOffers } : {})
+      }
+    };
+
+    const user = await User.findOneAndUpdate(
+      { mobile: cleanMobile },
+      updateDoc,
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    res.json({ success: true, data: user });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+

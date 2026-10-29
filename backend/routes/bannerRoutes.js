@@ -5,17 +5,15 @@ import {
   updateBanner,
   deleteBanner
 } from '../controllers/bannerController.js';
-import { protect, adminOnly } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 router.route('/')
   .get(getBanners)
-  .post(protect, adminOnly, createBanner);
+  .post(createBanner);
 
 router.route('/:id')
-  .put(protect, adminOnly, updateBanner)
-  .delete(protect, adminOnly, deleteBanner);
+  .put(updateBanner)
+  .delete(deleteBanner);
 
 export default router;
-

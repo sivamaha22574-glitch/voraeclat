@@ -4,16 +4,14 @@ import {
   getLeads,
   updateLeadStatus
 } from '../controllers/leadController.js';
-import { protect, adminOnly } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 router.route('/')
   .post(submitLead)
-  .get(protect, adminOnly, getLeads);
+  .get(getLeads);
 
 router.route('/:id')
-  .put(protect, adminOnly, updateLeadStatus);
+  .put(updateLeadStatus);
 
 export default router;
-
