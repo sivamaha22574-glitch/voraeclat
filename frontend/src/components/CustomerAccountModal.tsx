@@ -21,6 +21,7 @@ import {
   Copy,
   Check,
   Edit2,
+  XCircle,
 } from 'lucide-react';
 import { CustomerOrder, CustomerUser, OrderStatus } from '../types';
 import { TaxInvoiceModal } from './TaxInvoiceModal';
