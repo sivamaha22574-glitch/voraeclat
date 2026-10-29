@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { createClient } from '@supabase/supabase-js';
 import { Order } from '../models/Order.js';
 import { Product } from '../models/Product.js';
@@ -27,6 +28,7 @@ function normalizePaymentMode(method) {
 export async function syncOrderToMongo(row) {
   try {
     if (!row || !row.order_id) return;
+    if (mongoose.connection.readyState !== 1) return;
 
     const paymentMode = normalizePaymentMode(row.payment_method);
     const isPrepaid = paymentMode !== 'COD';
@@ -114,6 +116,8 @@ export async function syncOrderToMongo(row) {
 
 export async function syncAllFromSupabase() {
   try {
+    if (mongoose.connection.readyState !== 1) return;
+
     // 1. Sync Orders
     const { data: orders, error: oErr } = await supabase.from('puppy_orders').select('*');
     if (!oErr && orders && orders.length > 0) {
@@ -150,7 +154,13 @@ export async function syncAllFromSupabase() {
   }
 }
 
+let isSyncStarted = false;
+
 export function startSupabaseAutoSync() {
+  if (isSyncStarted) return;
+  if (mongoose.connection.readyState !== 1) return;
+  isSyncStarted = true;
+
   console.log('⚡ [AutoSync Service] Initializing Real-time Supabase-to-MongoDB Bridge...');
 
   // Initial sync immediately

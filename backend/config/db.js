@@ -16,7 +16,6 @@ export const connectDB = async () => {
   const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/voraeclat';
   console.log('[Connecting to URI]:', uri.replace(/:[^:]*@/, ':****@'));
   try {
-    mongoose.set('bufferCommands', false);
     const conn = await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 10000
     });
@@ -27,5 +26,6 @@ export const connectDB = async () => {
     isDbConnected = false;
     console.warn(`[MongoDB Notice]: Database connection failed (${error.message}).`);
     console.warn(`Backend is active in In-Memory/Offline-tolerant mode. All API routes remain responsive.`);
+    return null;
   }
 };
