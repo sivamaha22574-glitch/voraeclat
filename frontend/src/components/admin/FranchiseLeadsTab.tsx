@@ -105,11 +105,10 @@ export const FranchiseLeadsTab: React.FC<FranchiseLeadsTabProps> = ({ onNotify }
             <button
               key={status}
               onClick={() => setSelectedStatus(status)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                selectedStatus === status
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${selectedStatus === status
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
             >
               {status === 'all' ? 'All Applicants' : status}
             </button>
@@ -178,17 +177,16 @@ export const FranchiseLeadsTab: React.FC<FranchiseLeadsTabProps> = ({ onNotify }
                       onChange={(e) =>
                         handleUpdateStatus(lead.id, e.target.value as FranchiseLead['status'])
                       }
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border cursor-pointer ${
-                        lead.status === 'Approved'
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                          : lead.status === 'In Discussion'
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border cursor-pointer ${lead.status === 'Approved'
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                        : lead.status === 'In Discussion'
                           ? 'bg-indigo-50 text-indigo-800 border-indigo-300'
                           : lead.status === 'Contacted'
-                          ? 'bg-amber-50 text-amber-900 border-amber-300'
-                          : lead.status === 'Rejected'
-                          ? 'bg-rose-50 text-rose-800 border-rose-300'
-                          : 'bg-purple-50 text-purple-900 border-purple-300'
-                      }`}
+                            ? 'bg-amber-50 text-amber-900 border-amber-300'
+                            : lead.status === 'Rejected'
+                              ? 'bg-rose-50 text-rose-800 border-rose-300'
+                              : 'bg-purple-50 text-purple-900 border-purple-300'
+                        }`}
                     >
                       <option value="New">New</option>
                       <option value="Contacted">Contacted</option>

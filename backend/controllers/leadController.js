@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { FranchiseLead } from '../models/FranchiseLead.js';
 
 // @desc    Submit new franchise lead
@@ -29,10 +30,21 @@ export const getLeads = async (req, res) => {
 // @access  Private/Admin
 export const updateLeadStatus = async (req, res) => {
   try {
-    const lead = await FranchiseLead.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    });
+    const { id } = req.params;
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(id) && id.length === 24;
+    const lead = await FranchiseLead.findOneAndUpdate(
+      {
+        $or: [
+          { leadId: id },
+          ...(isValidObjectId ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])
+        ]
+      },
+      req.body,
+      {
+        new: true,
+        runValidators: true
+      }
+    );
     if (!lead) {
       return res.status(404).json({ success: false, message: 'Lead not found' });
     }

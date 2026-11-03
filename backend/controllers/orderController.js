@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Order } from '../models/Order.js';
 import { User } from '../models/User.js';
 
@@ -184,13 +185,14 @@ export const createOrder = async (req, res) => {
 export const getOrderById = async (req, res) => {
   try {
     const { id } = req.params;
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(id) && id.length === 24;
     const order = await Order.findOne({
       $or: [
         { orderId: id },
         { invoiceNumber: id },
         { trackingNumber: id },
         { awbNumber: id },
-        ...(id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])
+        ...(isValidObjectId ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])
       ]
     });
 
@@ -323,11 +325,12 @@ export const updateOrderStatus = async (req, res) => {
 
     if (codCollectionStatus) updateFields.codCollectionStatus = codCollectionStatus;
 
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(id) && id.length === 24;
     const order = await Order.findOneAndUpdate(
       {
         $or: [
           { orderId: id },
-          ...(id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])
+          ...(isValidObjectId ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])
         ]
       },
       updateDoc,

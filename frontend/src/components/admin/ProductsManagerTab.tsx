@@ -154,217 +154,217 @@ export const ALL_CATEGORY_OPTIONS: {
   icon: string;
   defaultSubs: string[];
 }[] = [
-  {
-    id: 'festive-ethnic',
-    name: 'Shop by Collection (Festive & Curated Edits)',
-    icon: '🪔',
-    defaultSubs: [
-      'Diwali 2026 Collection',
-      'Navratri Utsav',
-      'Halloween Collection',
-      'Rainwear Collection',
-      'Multi-packs',
-      'Bestsellers',
-      'Baby Essentials',
-      'Zari Silk Kurtas',
-      'Twirling Lehengas',
-      'Dhoti & Angrakha Sets',
-      'Embroidered Sherwanis',
-      'Silk Pattu Pavadai',
-      'Kurta Pajama Sets',
-    ],
-  },
-  {
-    id: 'boy-fashion',
-    name: 'Boy Fashion',
-    icon: '👦',
-    defaultSubs: [
-      'Graphic T-Shirts',
-      'Solid Crew Necks',
-      'Polo Shirts',
-      'Sleeveless Tanks',
-      'Casual Button-Downs',
-      'Formal Shirts',
-      'Flannel & Plaid',
-      'Denim Shirts',
-      'Jeans',
-      'Chinos & Khakis',
-      'Casual Shorts',
-      'Denim Shorts',
-      'Kurta Sets',
-      'Nehru Jackets',
-      'Hoodies & Sweatshirts',
-      'Denim Jackets',
-      'Pajama Sets',
-      'Performance Tees',
-    ],
-  },
-  {
-    id: 'girl-fashion',
-    name: 'Girl Fashion',
-    icon: '👧',
-    defaultSubs: [
-      'Casual / A-Line Day Dresses',
-      'Party & Birthday Frocks',
-      'Maxi & Sundresses',
-      'Shirt & Tiered Dresses',
-      'Tutu & Tulle Dresses',
-      'Graphic T-Shirts',
-      'Peplum & Ruffle Tops',
-      'Skirts',
-      'Shorts',
-      'Jeans',
-      'Leggings & Jeggings',
-      'Co-ord Sets',
-      'Rompers',
-      'Jumpsuits',
-      'Lehengas & Cholis',
-      'Anarkali & Kurta Sets',
-      'Pattu Pavadai',
-      'Cardigans & Sweaters',
-      'Denim Jackets',
-      'Nightdresses',
-      'Cotton Pajama Sets',
-    ],
-  },
-  {
-    id: 'baby-toddler',
-    name: 'Baby & Toddler (0-24M)',
-    icon: '👶',
-    defaultSubs: [
-      'Organic Rompers',
-      'Sleepsuits & Onesies',
-      'Baby Gift Hampers',
-      'Mittens & Booties',
-      'Swaddles & Blankets',
-      'Baby Essentials',
-    ],
-  },
-  {
-    id: 'casual-wear',
-    name: 'Casual & Daily Wear',
-    icon: '👕',
-    defaultSubs: [
-      'Casual Tees & Shorts',
-      'T-Shirts & Tops',
-      'Everyday Cotton Sets',
-      'Trackpants & Joggers',
-      'Multi-packs',
-      'Rainwear Collection',
-      'Halloween Collection',
-      'Loungewear & Nightwear',
-      'Pajamas',
-    ],
-  },
-  {
-    id: 'footwear-accessories',
-    name: 'Footwear & Accessories',
-    icon: '👟',
-    defaultSubs: [
-      'Sneakers & Casual Shoes',
-      'Ethnic Mojaris & Juttis',
-      'Booties & Pre-walkers',
-      'Hair Accessories & Bows',
-      'Kids Sunglasses',
-    ],
-  },
-  {
-    id: 'toys-learning',
-    name: 'Toys & Games',
-    icon: '🧸',
-    defaultSubs: [
-      'Wooden Montessori Toys',
-      'Building Blocks & Puzzles',
-      'STEAM & Robotics',
-      'Plush Soft Toys',
-      'Board Games & Activity',
-    ],
-  },
-  {
-    id: 'diapering',
-    name: 'Diapers & Wipes',
-    icon: '🧷',
-    defaultSubs: [
-      'Taped Diapers',
-      'Pant Diapers',
-      'Bamboo Water Wipes',
-      'Diaper Rash Cream',
-      'Changing Mats & Pails',
-    ],
-  },
-  {
-    id: 'feeding',
-    name: 'Feeding & Nursing',
-    icon: '🍼',
-    defaultSubs: [
-      'Anti-Colic Glass Bottles',
-      'Silicone Teethers & Soothers',
-      'Sterilizers & Warmers',
-      'High Chairs & Booster Seats',
-      'Bibs & Spoons',
-    ],
-  },
-  {
-    id: 'bath-skin',
-    name: 'Bath & Skin Care',
-    icon: '🛁',
-    defaultSubs: [
-      'Tear-Free Baby Wash & Shampoo',
-      'Cold Pressed Massage Oil',
-      'Organic Body Lotion',
-      'Soft Hooded Towels',
-      'Baby Grooming Kits',
-    ],
-  },
-  {
-    id: 'nursery-gear',
-    name: 'Cribs & Strollers',
-    icon: '🛏️',
-    defaultSubs: [
-      'Convertible Wooden Cribs',
-      'Cabin Travel Strollers',
-      'Baby Rockers & Bouncers',
-      'Car Safety Seats',
-      'Ergonomic Baby Carriers',
-    ],
-  },
-  {
-    id: 'books-library',
-    name: 'Books & Library',
-    icon: '📚',
-    defaultSubs: [
-      'Touch & Feel Sensory Books',
-      'Bedtime Story Books',
-      'Montessori Flashcards',
-      'Bilingual Picture Books',
-      'Early Learning Kits',
-    ],
-  },
-  {
-    id: 'health-safety',
-    name: 'Health & Safety',
-    icon: '🛡️',
-    defaultSubs: [
-      'Pediatric Digital Thermometers',
-      'Nasal Aspirators',
-      'High-Definition Baby Monitors',
-      'Corner Edge Cushions',
-      'Socket Safety Covers',
-    ],
-  },
-  {
-    id: 'moms-maternity',
-    name: "Mom's & Maternity",
-    icon: '🤰',
-    defaultSubs: [
-      'Maternity Maxi Dresses',
-      'Feeding Kurtas & Tops',
-      'Nursing Bras & Intimates',
-      'Postpartum Belly Wraps',
-      'Stretch Mark Creams',
-    ],
-  },
-];
+    {
+      id: 'festive-ethnic',
+      name: 'Shop by Collection (Festive & Curated Edits)',
+      icon: '🪔',
+      defaultSubs: [
+        'Diwali 2026 Collection',
+        'Navratri Utsav',
+        'Halloween Collection',
+        'Rainwear Collection',
+        'Multi-packs',
+        'Bestsellers',
+        'Baby Essentials',
+        'Zari Silk Kurtas',
+        'Twirling Lehengas',
+        'Dhoti & Angrakha Sets',
+        'Embroidered Sherwanis',
+        'Silk Pattu Pavadai',
+        'Kurta Pajama Sets',
+      ],
+    },
+    {
+      id: 'boy-fashion',
+      name: 'Boy Fashion',
+      icon: '👦',
+      defaultSubs: [
+        'Graphic T-Shirts',
+        'Solid Crew Necks',
+        'Polo Shirts',
+        'Sleeveless Tanks',
+        'Casual Button-Downs',
+        'Formal Shirts',
+        'Flannel & Plaid',
+        'Denim Shirts',
+        'Jeans',
+        'Chinos & Khakis',
+        'Casual Shorts',
+        'Denim Shorts',
+        'Kurta Sets',
+        'Nehru Jackets',
+        'Hoodies & Sweatshirts',
+        'Denim Jackets',
+        'Pajama Sets',
+        'Performance Tees',
+      ],
+    },
+    {
+      id: 'girl-fashion',
+      name: 'Girl Fashion',
+      icon: '👧',
+      defaultSubs: [
+        'Casual / A-Line Day Dresses',
+        'Party & Birthday Frocks',
+        'Maxi & Sundresses',
+        'Shirt & Tiered Dresses',
+        'Tutu & Tulle Dresses',
+        'Graphic T-Shirts',
+        'Peplum & Ruffle Tops',
+        'Skirts',
+        'Shorts',
+        'Jeans',
+        'Leggings & Jeggings',
+        'Co-ord Sets',
+        'Rompers',
+        'Jumpsuits',
+        'Lehengas & Cholis',
+        'Anarkali & Kurta Sets',
+        'Pattu Pavadai',
+        'Cardigans & Sweaters',
+        'Denim Jackets',
+        'Nightdresses',
+        'Cotton Pajama Sets',
+      ],
+    },
+    {
+      id: 'baby-toddler',
+      name: 'Baby & Toddler (0-24M)',
+      icon: '👶',
+      defaultSubs: [
+        'Organic Rompers',
+        'Sleepsuits & Onesies',
+        'Baby Gift Hampers',
+        'Mittens & Booties',
+        'Swaddles & Blankets',
+        'Baby Essentials',
+      ],
+    },
+    {
+      id: 'casual-wear',
+      name: 'Casual & Daily Wear',
+      icon: '👕',
+      defaultSubs: [
+        'Casual Tees & Shorts',
+        'T-Shirts & Tops',
+        'Everyday Cotton Sets',
+        'Trackpants & Joggers',
+        'Multi-packs',
+        'Rainwear Collection',
+        'Halloween Collection',
+        'Loungewear & Nightwear',
+        'Pajamas',
+      ],
+    },
+    {
+      id: 'footwear-accessories',
+      name: 'Footwear & Accessories',
+      icon: '👟',
+      defaultSubs: [
+        'Sneakers & Casual Shoes',
+        'Ethnic Mojaris & Juttis',
+        'Booties & Pre-walkers',
+        'Hair Accessories & Bows',
+        'Kids Sunglasses',
+      ],
+    },
+    {
+      id: 'toys-learning',
+      name: 'Toys & Games',
+      icon: '🧸',
+      defaultSubs: [
+        'Wooden Montessori Toys',
+        'Building Blocks & Puzzles',
+        'STEAM & Robotics',
+        'Plush Soft Toys',
+        'Board Games & Activity',
+      ],
+    },
+    {
+      id: 'diapering',
+      name: 'Diapers & Wipes',
+      icon: '🧷',
+      defaultSubs: [
+        'Taped Diapers',
+        'Pant Diapers',
+        'Bamboo Water Wipes',
+        'Diaper Rash Cream',
+        'Changing Mats & Pails',
+      ],
+    },
+    {
+      id: 'feeding',
+      name: 'Feeding & Nursing',
+      icon: '🍼',
+      defaultSubs: [
+        'Anti-Colic Glass Bottles',
+        'Silicone Teethers & Soothers',
+        'Sterilizers & Warmers',
+        'High Chairs & Booster Seats',
+        'Bibs & Spoons',
+      ],
+    },
+    {
+      id: 'bath-skin',
+      name: 'Bath & Skin Care',
+      icon: '🛁',
+      defaultSubs: [
+        'Tear-Free Baby Wash & Shampoo',
+        'Cold Pressed Massage Oil',
+        'Organic Body Lotion',
+        'Soft Hooded Towels',
+        'Baby Grooming Kits',
+      ],
+    },
+    {
+      id: 'nursery-gear',
+      name: 'Cribs & Strollers',
+      icon: '🛏️',
+      defaultSubs: [
+        'Convertible Wooden Cribs',
+        'Cabin Travel Strollers',
+        'Baby Rockers & Bouncers',
+        'Car Safety Seats',
+        'Ergonomic Baby Carriers',
+      ],
+    },
+    {
+      id: 'books-library',
+      name: 'Books & Library',
+      icon: '📚',
+      defaultSubs: [
+        'Touch & Feel Sensory Books',
+        'Bedtime Story Books',
+        'Montessori Flashcards',
+        'Bilingual Picture Books',
+        'Early Learning Kits',
+      ],
+    },
+    {
+      id: 'health-safety',
+      name: 'Health & Safety',
+      icon: '🛡️',
+      defaultSubs: [
+        'Pediatric Digital Thermometers',
+        'Nasal Aspirators',
+        'High-Definition Baby Monitors',
+        'Corner Edge Cushions',
+        'Socket Safety Covers',
+      ],
+    },
+    {
+      id: 'moms-maternity',
+      name: "Mom's & Maternity",
+      icon: '🤰',
+      defaultSubs: [
+        'Maternity Maxi Dresses',
+        'Feeding Kurtas & Tops',
+        'Nursing Bras & Intimates',
+        'Postpartum Belly Wraps',
+        'Stretch Mark Creams',
+      ],
+    },
+  ];
 
 const SAMPLE_IMAGE_PRESETS = [
   {
@@ -511,16 +511,16 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
       catId && catId !== 'all'
         ? (catId as CategoryId)
         : selectedCategory !== 'all'
-        ? (selectedCategory as CategoryId)
-        : 'casual-wear';
+          ? (selectedCategory as CategoryId)
+          : 'casual-wear';
 
     const matchedCat = ALL_CATEGORY_OPTIONS.find((c) => c.id === targetCatId);
     const resolvedSub =
       subName && subName !== 'all' && subName.trim() !== ''
         ? subName
         : selectedSubCategory !== 'all' && selectedSubCategory.trim() !== ''
-        ? selectedSubCategory
-        : matchedCat?.defaultSubs[0] || 'Casual Tees & Shorts';
+          ? selectedSubCategory
+          : matchedCat?.defaultSubs[0] || 'Casual Tees & Shorts';
 
     setNewProduct({
       name: '',
@@ -982,25 +982,22 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
             <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs">
               <button
                 onClick={() => setStockFilter('all')}
-                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                  stockFilter === 'all' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600'
-                }`}
+                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${stockFilter === 'all' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600'
+                  }`}
               >
                 All
               </button>
               <button
                 onClick={() => setStockFilter('inStock')}
-                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                  stockFilter === 'inStock' ? 'bg-white text-emerald-800 shadow-2xs' : 'text-slate-600'
-                }`}
+                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${stockFilter === 'inStock' ? 'bg-white text-emerald-800 shadow-2xs' : 'text-slate-600'
+                  }`}
               >
                 In Stock
               </button>
               <button
                 onClick={() => setStockFilter('outOfStock')}
-                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                  stockFilter === 'outOfStock' ? 'bg-white text-rose-800 shadow-2xs' : 'text-slate-600'
-                }`}
+                className={`px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${stockFilter === 'outOfStock' ? 'bg-white text-rose-800 shadow-2xs' : 'text-slate-600'
+                  }`}
               >
                 Out of Stock
               </button>
@@ -1023,11 +1020,10 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 no-scrollbar text-xs">
           <button
             onClick={() => handleSelectCategory('all')}
-            className={`px-2.5 py-1 rounded-lg font-semibold shrink-0 transition-colors cursor-pointer ${
-              selectedCategory === 'all'
-                ? 'bg-slate-900 text-white font-bold'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
+            className={`px-2.5 py-1 rounded-lg font-semibold shrink-0 transition-colors cursor-pointer ${selectedCategory === 'all'
+              ? 'bg-slate-900 text-white font-bold'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
           >
             All ({productList.length})
           </button>
@@ -1038,11 +1034,10 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
               <button
                 key={cat.id}
                 onClick={() => handleSelectCategory(cat.id)}
-                className={`px-2.5 py-1 rounded-lg font-semibold shrink-0 transition-colors cursor-pointer flex items-center gap-1 ${
-                  isSelected
-                    ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
+                className={`px-2.5 py-1 rounded-lg font-semibold shrink-0 transition-colors cursor-pointer flex items-center gap-1 ${isSelected
+                  ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
               >
                 <span>{cat.icon}</span>
                 <span>{cat.name.split(' ')[0]}</span>
@@ -1206,11 +1201,10 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 no-scrollbar text-xs">
             <button
               onClick={() => setSelectedSubCategory('all')}
-              className={`px-2.5 py-1 rounded-lg font-semibold shrink-0 transition-colors cursor-pointer ${
-                selectedSubCategory === 'all'
-                  ? 'bg-slate-900 text-white font-bold'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
+              className={`px-2.5 py-1 rounded-lg font-semibold shrink-0 transition-colors cursor-pointer ${selectedSubCategory === 'all'
+                ? 'bg-slate-900 text-white font-bold'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
             >
               All ({productList.filter((p) => p.categoryId === selectedCategory).length})
             </button>
@@ -1223,23 +1217,21 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                   <button
                     key={sub}
                     onClick={() => setSelectedSubCategory(sub)}
-                    className={`px-2.5 py-1 rounded-lg font-semibold shrink-0 transition-colors cursor-pointer flex items-center gap-1.5 ${
-                      isSelected
-                        ? 'bg-amber-400 text-slate-950 font-black shadow-xs'
-                        : count > 0
+                    className={`px-2.5 py-1 rounded-lg font-semibold shrink-0 transition-colors cursor-pointer flex items-center gap-1.5 ${isSelected
+                      ? 'bg-amber-400 text-slate-950 font-black shadow-xs'
+                      : count > 0
                         ? 'bg-amber-50 text-amber-900 border border-amber-200/60 hover:bg-amber-100'
                         : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                    }`}
+                      }`}
                   >
                     <span>{sub}</span>
                     <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                        isSelected
-                          ? 'bg-slate-950 text-amber-300'
-                          : count > 0
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected
+                        ? 'bg-slate-950 text-amber-300'
+                        : count > 0
                           ? 'bg-amber-200/80 text-amber-950'
                           : 'bg-slate-200 text-slate-600'
-                      }`}
+                        }`}
                     >
                       {count}
                     </span>
@@ -1395,17 +1387,15 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                     <td className="py-3.5 px-4" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => handleToggleStock(p.id)}
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black cursor-pointer transition-all ${
-                          p.inStock
-                            ? 'bg-emerald-100 text-emerald-800 hover:bg-rose-100 hover:text-rose-800'
-                            : 'bg-rose-100 text-rose-800 hover:bg-emerald-100 hover:text-emerald-800'
-                        }`}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black cursor-pointer transition-all ${p.inStock
+                          ? 'bg-emerald-100 text-emerald-800 hover:bg-rose-100 hover:text-rose-800'
+                          : 'bg-rose-100 text-rose-800 hover:bg-emerald-100 hover:text-emerald-800'
+                          }`}
                         title="Click to toggle stock status"
                       >
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            p.inStock ? 'bg-emerald-500' : 'bg-rose-500'
-                          }`}
+                          className={`w-1.5 h-1.5 rounded-full ${p.inStock ? 'bg-emerald-500' : 'bg-rose-500'
+                            }`}
                         />
                         <span>{p.inStock ? 'In Stock' : 'Out of Stock'}</span>
                       </button>
@@ -1571,11 +1561,10 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                             description: `Comfortable ${sub} made with premium breathable baby-safe cotton fabric.`,
                           })
                         }
-                        className={`text-[10px] px-2 py-0.5 rounded-md font-medium cursor-pointer transition-colors ${
-                          newProduct.subCategory === sub
-                            ? 'bg-amber-400 text-slate-950 font-bold shadow-2xs'
-                            : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
-                        }`}
+                        className={`text-[10px] px-2 py-0.5 rounded-md font-medium cursor-pointer transition-colors ${newProduct.subCategory === sub
+                          ? 'bg-amber-400 text-slate-950 font-bold shadow-2xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                          }`}
                       >
                         {sub}
                       </button>
@@ -2077,7 +2066,7 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                         {Math.round(
                           ((editingProduct.originalPrice - editingProduct.price) /
                             editingProduct.originalPrice) *
-                            100
+                          100
                         )}
                         % OFF
                       </span>
@@ -2244,7 +2233,7 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                       {Math.round(
                         ((quickPriceEditProduct.originalPrice - quickPriceEditProduct.price) /
                           quickPriceEditProduct.originalPrice) *
-                          100
+                        100
                       )}
                       % OFF (Save ₹{quickPriceEditProduct.originalPrice - quickPriceEditProduct.price})
                     </span>
@@ -2644,9 +2633,8 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                         setActiveMarkingSlot(0);
                         setMarkingActiveTab('photos');
                       }}
-                      className={`relative rounded-xl overflow-hidden aspect-[3/4] bg-slate-800 border cursor-pointer transition-all group ${
-                        activeMarkingSlot === 0 ? 'ring-2 ring-amber-400 border-amber-400' : 'border-slate-700/80 hover:border-amber-400/60'
-                      }`}
+                      className={`relative rounded-xl overflow-hidden aspect-[3/4] bg-slate-800 border cursor-pointer transition-all group ${activeMarkingSlot === 0 ? 'ring-2 ring-amber-400 border-amber-400' : 'border-slate-700/80 hover:border-amber-400/60'
+                        }`}
                     >
                       <img
                         src={markingAreaDraft.galleryImages[0]}
@@ -2668,9 +2656,8 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                       onClick={() => {
                         setActiveMarkingSlot(1);
                       }}
-                      className={`relative rounded-xl overflow-hidden aspect-[3/4] bg-[#1a2332] text-white p-2.5 sm:p-3 flex flex-col justify-between border cursor-pointer transition-all group ${
-                        activeMarkingSlot === 1 ? 'ring-2 ring-amber-400 border-amber-400' : 'border-slate-700/80 hover:border-amber-400/60'
-                      }`}
+                      className={`relative rounded-xl overflow-hidden aspect-[3/4] bg-[#1a2332] text-white p-2.5 sm:p-3 flex flex-col justify-between border cursor-pointer transition-all group ${activeMarkingSlot === 1 ? 'ring-2 ring-amber-400 border-amber-400' : 'border-slate-700/80 hover:border-amber-400/60'
+                        }`}
                     >
                       {/* Background silhouette on right */}
                       <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-35 pointer-events-none overflow-hidden">
@@ -2726,9 +2713,8 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                         setActiveMarkingSlot(2);
                         setMarkingActiveTab('photos');
                       }}
-                      className={`relative rounded-xl overflow-hidden aspect-[3/4] bg-slate-800 border cursor-pointer transition-all group ${
-                        activeMarkingSlot === 2 ? 'ring-2 ring-amber-400 border-amber-400' : 'border-slate-700/80 hover:border-amber-400/60'
-                      }`}
+                      className={`relative rounded-xl overflow-hidden aspect-[3/4] bg-slate-800 border cursor-pointer transition-all group ${activeMarkingSlot === 2 ? 'ring-2 ring-amber-400 border-amber-400' : 'border-slate-700/80 hover:border-amber-400/60'
+                        }`}
                     >
                       <img
                         src={markingAreaDraft.galleryImages[2]}
@@ -2751,9 +2737,8 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                         setActiveMarkingSlot(3);
                         setMarkingActiveTab('photos');
                       }}
-                      className={`relative rounded-xl overflow-hidden aspect-[3/4] bg-slate-800 border cursor-pointer transition-all group ${
-                        activeMarkingSlot === 3 ? 'ring-2 ring-amber-400 border-amber-400' : 'border-slate-700/80 hover:border-amber-400/60'
-                      }`}
+                      className={`relative rounded-xl overflow-hidden aspect-[3/4] bg-slate-800 border cursor-pointer transition-all group ${activeMarkingSlot === 3 ? 'ring-2 ring-amber-400 border-amber-400' : 'border-slate-700/80 hover:border-amber-400/60'
+                        }`}
                     >
                       <img
                         src={markingAreaDraft.galleryImages[3]}
@@ -2784,11 +2769,10 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                   <button
                     type="button"
                     onClick={() => setMarkingActiveTab('photos')}
-                    className={`px-3.5 py-1.5 rounded-xl font-black text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
-                      markingActiveTab === 'photos'
-                        ? 'bg-amber-400 text-slate-950 shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                    className={`px-3.5 py-1.5 rounded-xl font-black text-xs flex items-center gap-1.5 transition-all cursor-pointer ${markingActiveTab === 'photos'
+                      ? 'bg-amber-400 text-slate-950 shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
                   >
                     <Camera className="w-3.5 h-3.5" />
                     <span>Change 4 Photos</span>
@@ -2796,11 +2780,10 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                   <button
                     type="button"
                     onClick={() => setMarkingActiveTab('highlights')}
-                    className={`px-3.5 py-1.5 rounded-xl font-black text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
-                      markingActiveTab === 'highlights'
-                        ? 'bg-amber-400 text-slate-950 shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                    className={`px-3.5 py-1.5 rounded-xl font-black text-xs flex items-center gap-1.5 transition-all cursor-pointer ${markingActiveTab === 'highlights'
+                      ? 'bg-amber-400 text-slate-950 shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                     <span>Edit Style Highlights Text</span>
@@ -2843,11 +2826,10 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                         <div
                           key={item.slot}
                           onClick={() => setActiveMarkingSlot(item.slot)}
-                          className={`p-3.5 rounded-2xl border transition-all ${
-                            isSelected
-                              ? 'bg-amber-50/60 border-amber-400 ring-2 ring-amber-400/20'
-                              : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                          }`}
+                          className={`p-3.5 rounded-2xl border transition-all ${isSelected
+                            ? 'bg-amber-50/60 border-amber-400 ring-2 ring-amber-400/20'
+                            : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                            }`}
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">

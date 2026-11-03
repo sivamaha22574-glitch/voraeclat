@@ -716,17 +716,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             {/* Admin Profile & Credentials Trigger */}
             <button
               onClick={() => setActiveTab('security')}
-              className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
-                activeTab === 'security'
-                  ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md font-bold'
-                  : 'bg-slate-800/80 hover:bg-slate-800 border-slate-700/80 hover:border-amber-400/50 text-white'
-              }`}
+              className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${activeTab === 'security'
+                ? 'bg-amber-400 text-slate-950 border-amber-400 shadow-md font-bold'
+                : 'bg-slate-800/80 hover:bg-slate-800 border-slate-700/80 hover:border-amber-400/50 text-white'
+                }`}
               title="Click to manage Admin Username and Password credentials"
             >
               <div
-                className={`w-6 h-6 rounded-full font-black flex items-center justify-center text-[10px] ${
-                  activeTab === 'security' ? 'bg-slate-950 text-amber-400' : 'bg-amber-400 text-slate-950'
-                }`}
+                className={`w-6 h-6 rounded-full font-black flex items-center justify-center text-[10px] ${activeTab === 'security' ? 'bg-slate-950 text-amber-400' : 'bg-amber-400 text-slate-950'
+                  }`}
               >
                 {adminProfile.role === 'Super Admin' ? 'SA' : 'CMO'}
               </div>
@@ -738,9 +736,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   />
                 </div>
                 <div
-                  className={`text-[10px] ${
-                    activeTab === 'security' ? 'text-slate-800 font-semibold' : 'text-slate-400'
-                  }`}
+                  className={`text-[10px] ${activeTab === 'security' ? 'text-slate-800 font-semibold' : 'text-slate-400'
+                    }`}
                 >
                   {adminProfile.role}
                 </div>
@@ -763,11 +760,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           <div className="max-w-7xl mx-auto flex items-center gap-1 sm:gap-2 overflow-x-auto py-2 no-scrollbar">
             <button
               onClick={() => setActiveTab('ads')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'ads'
-                  ? 'bg-amber-400 text-slate-950 shadow-md scale-102'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'ads'
+                ? 'bg-amber-400 text-slate-950 shadow-md scale-102'
+                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>Ad Dashboard</span>
@@ -778,11 +774,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <button
               onClick={() => setActiveTab('overview')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'overview'
-                  ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'overview'
+                ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
               <span>Store Overview</span>
@@ -790,11 +785,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <button
               onClick={() => setActiveTab('orders')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'orders'
-                  ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'orders'
+                ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
             >
               <Package className="w-3.5 h-3.5" />
               <span>Orders & Logistics</span>
@@ -805,11 +799,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <button
               onClick={() => setActiveTab('products')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'products'
-                  ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'products'
+                ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
             >
               <ShoppingBag className="w-3.5 h-3.5" />
               <span>Products Master</span>
@@ -817,11 +810,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <button
               onClick={() => setActiveTab('franchise')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'franchise'
-                  ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'franchise'
+                ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
             >
               <Building2 className="w-3.5 h-3.5" />
               <span>Franchise Leads</span>
@@ -829,11 +821,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <button
               onClick={() => setActiveTab('customers')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'customers'
-                  ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'customers'
+                ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
             >
               <Users className="w-3.5 h-3.5" />
               <span>Customer Accounts</span>
@@ -841,11 +832,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <button
               onClick={() => setActiveTab('security')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === 'security'
-                  ? 'bg-amber-400 text-slate-950 font-black shadow-md scale-102'
-                  : 'text-amber-300/80 hover:text-amber-300 hover:bg-slate-800/60'
-              }`}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${activeTab === 'security'
+                ? 'bg-amber-400 text-slate-950 font-black shadow-md scale-102'
+                : 'text-amber-300/80 hover:text-amber-300 hover:bg-slate-800/60'
+                }`}
             >
               <KeyRound className="w-3.5 h-3.5" />
               <span>Credentials & Security</span>

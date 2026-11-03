@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { AdCampaign } from '../models/AdCampaign.js';
 
 // @desc    Get all ad campaigns
@@ -49,7 +50,13 @@ export const createAdCampaign = async (req, res) => {
 export const deleteAdCampaign = async (req, res) => {
   try {
     const { id } = req.params;
-    await AdCampaign.findOneAndDelete({ $or: [{ campaignId: id }, { _id: id }] });
+    const isValidObjectId = mongoose.Types.ObjectId.isValid(id) && id.length === 24;
+    await AdCampaign.findOneAndDelete({
+      $or: [
+        { campaignId: id },
+        ...(isValidObjectId ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])
+      ]
+    });
     res.json({ success: true, message: 'Ad campaign deleted' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

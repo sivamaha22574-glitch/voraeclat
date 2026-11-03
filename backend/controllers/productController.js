@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Product } from '../models/Product.js';
 import { defaultProducts } from '../data/seedProducts.js';
 import { isDbConnected } from '../config/db.js';
@@ -92,10 +93,11 @@ export const getProductById = async (req, res) => {
 
     if (isDbConnected) {
       try {
+        const isValidObjectId = mongoose.Types.ObjectId.isValid(id) && id.length === 24;
         let product = await Product.findOne({
           $or: [
             { customId: id },
-            ...(id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])
+            ...(isValidObjectId ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])
           ]
         });
         if (product) return res.json({ success: true, data: product });
@@ -169,8 +171,9 @@ export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     if (isDbConnected) {
+      const isValidObjectId = mongoose.Types.ObjectId.isValid(id) && id.length === 24;
       const product = await Product.findOneAndUpdate(
-        { $or: [{ customId: id }, ...(id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])] },
+        { $or: [{ customId: id }, ...(isValidObjectId ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])] },
         req.body,
         { new: true, runValidators: true }
       );
@@ -196,8 +199,9 @@ export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
     if (isDbConnected) {
+      const isValidObjectId = mongoose.Types.ObjectId.isValid(id) && id.length === 24;
       await Product.findOneAndDelete({
-        $or: [{ customId: id }, ...(id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])]
+        $or: [{ customId: id }, ...(isValidObjectId ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])]
       });
     }
     inMemoryProducts = inMemoryProducts.filter(p => p.customId !== id && p.id !== id);

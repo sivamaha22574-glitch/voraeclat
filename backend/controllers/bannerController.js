@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Banner } from '../models/Banner.js';
 import { defaultBanners } from '../data/seedProducts.js';
 import { isDbConnected } from '../config/db.js';
@@ -85,7 +86,17 @@ export const updateBanner = async (req, res) => {
   try {
     const { id } = req.params;
     if (isDbConnected) {
-      const banner = await Banner.findByIdAndUpdate(id, req.body, { new: true });
+      const isValidObjectId = mongoose.Types.ObjectId.isValid(id) && id.length === 24;
+      const banner = await Banner.findOneAndUpdate(
+        {
+          $or: [
+            { customId: id },
+            ...(isValidObjectId ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])
+          ]
+        },
+        req.body,
+        { new: true }
+      );
       if (banner) return res.json({ success: true, data: banner });
     }
     const idx = inMemoryBanners.findIndex(b => b.customId === id || b.id === id);
@@ -106,7 +117,13 @@ export const deleteBanner = async (req, res) => {
   try {
     const { id } = req.params;
     if (isDbConnected) {
-      await Banner.findByIdAndDelete(id);
+      const isValidObjectId = mongoose.Types.ObjectId.isValid(id) && id.length === 24;
+      await Banner.findOneAndDelete({
+        $or: [
+          { customId: id },
+          ...(isValidObjectId ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])
+        ]
+      });
     }
     inMemoryBanners = inMemoryBanners.filter(b => b.customId !== id && b.id !== id);
     res.json({ success: true, message: 'Banner removed' });
