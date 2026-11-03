@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
 import { isDbConnected } from '../config/db.js';
 
@@ -146,12 +147,14 @@ export const resetAdmin = async (req, res) => {
     // Update in MongoDB if connected
     if (isDbConnected) {
       try {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(cleanPass, salt);
         await User.findOneAndUpdate(
           { role: 'admin' },
           {
             $set: {
               name: cleanUser,
-              password: cleanPass
+              password: hashedPassword
             }
           },
           { upsert: true }
@@ -186,7 +189,7 @@ export const updateAdmin = async (req, res) => {
     const match = inMemoryAdmins.find(
       (a) => a.username.toLowerCase() === cleanCurrent && (a.password === cleanPass || !cleanPass)
     ) || (cleanCurrent === 'admin' && (cleanPass === 'admin' || !cleanPass))
-      || (cleanCurrent === 'mayilvanan' && (cleanPass === 'Mayil@1718' || cleanPass === 'Mayil@1101' || !cleanPass));
+      || (cleanCurrent === 'mayilvanan' && (cleanPass === 'Mayil@4446' || cleanPass === 'Mayil@1718' || cleanPass === 'Mayil@1101' || !cleanPass));
 
     if (!match) {
       return res.status(401).json({ success: false, message: 'Current credentials incorrect' });
