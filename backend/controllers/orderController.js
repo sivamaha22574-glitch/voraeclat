@@ -48,6 +48,13 @@ export const createOrder = async (req, res) => {
     }
 
     const orderId = req.body.orderId || `ORD-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
+
+    // Check if order already exists (idempotent creation)
+    const existing = await Order.findOne({ orderId });
+    if (existing) {
+      return res.status(200).json({ success: true, data: existing, message: 'Order already recorded in MongoDB' });
+    }
+
     const invoiceNumber = `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     const finalMobile = customerMobile || req.body.customerPhone || (deliveryAddress && deliveryAddress.phone) || '+91 9999999999';
     const finalName = customerName || (deliveryAddress && deliveryAddress.name) || 'Customer';

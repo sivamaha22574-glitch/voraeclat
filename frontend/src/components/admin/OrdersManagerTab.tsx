@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Package,
   Search,
@@ -21,7 +21,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { CustomerOrder, OrderStatus, CourierPartner, PaymentMode, DeliveryPendingReason } from '../../types';
-import { updatePuppyOrderStatusInSupabase } from '../../lib/supabase';
+import { updatePuppyOrderStatusInSupabase, fetchPuppyOrdersFromSupabase } from '../../lib/supabase';
 import { TaxInvoiceModal } from '../TaxInvoiceModal';
 
 interface OrdersManagerTabProps {
@@ -63,6 +63,36 @@ export const OrdersManagerTab: React.FC<OrdersManagerTabProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<string>('Just now');
+
+  const refreshOrdersFromMongo = async (silent = false) => {
+    if (!silent) setIsRefreshing(true);
+    try {
+      const liveOrders = await fetchPuppyOrdersFromSupabase();
+      if (liveOrders && liveOrders.length > 0) {
+        onUpdateOrders(liveOrders);
+        if (!silent) onNotify(`Synced ${liveOrders.length} live orders from MongoDB Atlas!`);
+      }
+      setLastRefreshedAt(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    } catch {
+      if (!silent) onNotify('Failed to reach MongoDB server.');
+    } finally {
+      if (!silent) setIsRefreshing(false);
+    }
+  };
+
+  // 1. Fetch immediately when Orders tab is opened
+  useEffect(() => {
+    refreshOrdersFromMongo(true);
+
+    // 2. Auto-polling interval every 12 seconds so new orders show automatically!
+    const interval = setInterval(() => {
+      refreshOrdersFromMongo(true);
+    }, 12000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Status Change Dialog or Immediate Update
   const handleStatusChange = (
@@ -192,10 +222,22 @@ export const OrdersManagerTab: React.FC<OrdersManagerTabProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="text-right">
-            <div className="text-[10px] uppercase font-bold text-slate-400">Total Filtered Orders</div>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => refreshOrdersFromMongo(false)}
+            disabled={isRefreshing}
+            className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl flex items-center gap-1.5 transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-60"
+            title="Fetch latest orders directly from MongoDB Atlas"
+          >
+            <RotateCcw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>{isRefreshing ? 'Syncing...' : 'Refresh Orders'}</span>
+          </button>
+
+          <div className="text-right border-l border-slate-200 pl-3">
+            <div className="text-[10px] uppercase font-bold text-slate-400">Total Orders</div>
             <div className="text-lg font-black text-slate-900">{filteredOrders.length}</div>
+            <div className="text-[9px] text-slate-400">Sync: {lastRefreshedAt}</div>
           </div>
         </div>
       </div>

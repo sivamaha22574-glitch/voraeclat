@@ -602,7 +602,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     </div>
                     <div>
                       <div className="font-bold text-slate-900">Order Confirmed &amp; Logged in Cloud</div>
-                      <div className="text-[10px] text-slate-500">Auto-synced into MongoDB Atlas and Supabase</div>
+                      <div className="text-[10px] text-slate-500">Auto-synced directly into MongoDB Atlas</div>
                     </div>
                   </div>
 

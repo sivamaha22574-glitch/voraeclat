@@ -282,9 +282,9 @@ export default function App() {
       }
     });
 
-    // 2. Fetch live customer orders from Supabase
+    // 2. Fetch live customer orders from MongoDB
     fetchPuppyOrdersFromSupabase().then((remoteOrders) => {
-      if (remoteOrders) {
+      if (remoteOrders && remoteOrders.length > 0) {
         setCustomerOrders(remoteOrders);
         try {
           localStorage.setItem('voraeclat_customer_orders', JSON.stringify(remoteOrders));
@@ -346,10 +346,17 @@ export default function App() {
     const updated = appendCustomerOrder(newOrder);
     setCustomerOrders(updated);
     showToast(`Order #${newOrder.orderId} placed! Tracking details generated.`);
-    // Asynchronously sync to Supabase puppy_orders
-    insertPuppyOrderToSupabase(newOrder).catch((err) => {
-      console.warn('Failed to sync placed order to Supabase:', err);
-    });
+    // Sync directly to MongoDB Atlas backend & refresh
+    insertPuppyOrderToSupabase(newOrder)
+      .then(() => fetchPuppyOrdersFromSupabase())
+      .then((remoteOrders) => {
+        if (remoteOrders && remoteOrders.length > 0) {
+          setCustomerOrders(remoteOrders);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to sync placed order to MongoDB:', err);
+      });
   };
 
   const handleReorder = (order: CustomerOrder) => {

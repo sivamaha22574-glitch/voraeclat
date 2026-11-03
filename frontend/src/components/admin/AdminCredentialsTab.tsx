@@ -210,13 +210,13 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider mb-2">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Supabase Cloud Security & Auth</span>
+            <span>MongoDB Atlas Cloud Security & Auth</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
             Admin Access & Password Management
           </h2>
           <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
-            Update your administrator username and password, manage team access credentials, and monitor authenticated active sessions connected directly to Supabase.
+            Update your administrator username and password, manage team access credentials, and monitor authenticated active sessions connected directly to MongoDB Atlas.
           </p>
         </div>
 
@@ -250,14 +250,14 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
                 <div>
                   <h3 className="text-lg font-black text-white">Change Admin Username & Password</h3>
                   <p className="text-xs text-slate-400">
-                    Saves directly to Supabase <code className="text-amber-300 font-mono">public.puppy_admin_users</code> table
+                    Saves directly to MongoDB Atlas <code className="text-amber-300 font-mono">users</code> collection
                   </p>
                 </div>
               </div>
 
               <span className="text-[11px] font-bold px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center gap-1.5">
                 <Database className="w-3 h-3" />
-                <span>Live Supabase Connected</span>
+                <span>Live MongoDB Atlas Connected</span>
               </span>
             </div>
 
@@ -403,7 +403,7 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
                   {isUpdating ? (
                     <>
                       <div className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                      <span>Updating in Supabase Cloud...</span>
+                      <span>Updating in MongoDB Atlas...</span>
                     </>
                   ) : (
                     <>
@@ -439,18 +439,18 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-slate-400">Auth Engine:</span>
-                <span className="font-mono text-slate-300">Supabase PostgreSQL 17</span>
+                <span className="font-mono text-slate-300">MongoDB Atlas Cloud</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-400">Encrypted DB Table:</span>
-                <span className="font-mono text-[10px] text-indigo-300">public.puppy_admin_users</span>
+                <span className="text-slate-400">Encrypted DB Collection:</span>
+                <span className="font-mono text-[10px] text-indigo-300">users</span>
               </div>
             </div>
 
             <div className="p-3 bg-amber-400/5 border border-amber-400/20 rounded-2xl text-[11px] text-amber-200/90 leading-relaxed flex items-start gap-2">
               <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
               <span>
-                Any changes made here take effect instantly across all devices and browser tabs connected to this Supabase backend.
+                Any changes made here take effect instantly across all devices and browser tabs connected to this MongoDB Atlas backend.
               </span>
             </div>
           </div>

@@ -193,7 +193,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       }
 
       if (res.success) {
-        setChangeModalSuccess(res.message || 'Admin credentials updated successfully in Supabase cloud!');
+        setChangeModalSuccess(res.message || 'Admin credentials updated successfully in MongoDB Atlas!');
         const updatedUser = res.username || newU;
         setAdminUsername(updatedUser);
         setAdminPassword(newP);
@@ -454,7 +454,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               {isLoggingIn ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
-                  <span>Verifying Credentials in Supabase Cloud...</span>
+                  <span>Verifying Credentials in MongoDB Atlas...</span>
                 </>
               ) : (
                 <>
@@ -514,7 +514,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   </div>
                   <div>
                     <h3 className="font-black text-base text-white">Change Admin Credentials</h3>
-                    <p className="text-[11px] text-slate-400">Updates username and password in Supabase cloud</p>
+                    <p className="text-[11px] text-slate-400">Updates username and password in MongoDB Atlas</p>
                   </div>
                 </div>
                 <button
@@ -613,7 +613,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       {changeShowPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       <span>{changeShowPassword ? 'Hide Passwords' : 'Show Passwords'}</span>
                     </button>
-                    <span className="text-[10px] text-slate-500">Instant Supabase Cloud Sync</span>
+                    <span className="text-[10px] text-slate-500">Instant MongoDB Atlas Sync</span>
                   </div>
                 </div>
 

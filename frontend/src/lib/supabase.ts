@@ -27,19 +27,50 @@ export const supabase = {
   }),
 } as any;
 
-// Helper for API requests
+// Helper for API requests connecting directly to MongoDB Atlas Express backend
 async function apiFetch<T = any>(endpoint: string, options?: RequestInit): Promise<T | null> {
   try {
-    const res = await fetch(endpoint, {
+    let res = await fetch(endpoint, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
         ...(options?.headers || {}),
       },
     });
+
+    if (!res.ok && !endpoint.startsWith('http')) {
+      // Direct localhost:5000 fallback if relative proxy fails
+      try {
+        const directRes = await fetch(`http://localhost:5000${endpoint}`, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(options?.headers || {}),
+          },
+        });
+        if (directRes.ok) return await directRes.json();
+      } catch {
+        // ignore
+      }
+    }
+
     if (!res.ok) return null;
     return await res.json();
   } catch (err) {
+    if (!endpoint.startsWith('http')) {
+      try {
+        const directRes = await fetch(`http://localhost:5000${endpoint}`, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(options?.headers || {}),
+          },
+        });
+        if (directRes.ok) return await directRes.json();
+      } catch {
+        // ignore
+      }
+    }
     return null;
   }
 }
@@ -432,14 +463,14 @@ export async function submitPuppyCheckoutOrder(request: CheckoutOrderRequest): P
         city: request.customerCity,
         pincode: request.customerPincode,
       },
-      items: (request.items || []).map((it) => ({
-        productId: it.id,
-        productName: it.name,
-        price: it.price,
-        quantity: it.quantity,
-        size: it.size,
+      items: (request.items || []).map((it: any) => ({
+        productId: it.productId || it.id || 'PRD-DEFAULT',
+        productName: it.productName || it.name || 'Voraeclat Item',
+        price: Number(it.price) || 499,
+        quantity: Number(it.quantity) || 1,
+        size: it.size || 'Standard',
         color: it.color || '',
-        imageUrl: it.image || '',
+        imageUrl: it.imageUrl || it.image || '/voraeclat-mark.png',
       })),
       totalAmount: request.totalAmount,
       subTotal: request.subTotal || request.totalAmount,
@@ -485,12 +516,12 @@ export async function fetchPuppyOrdersFromSupabase(customerPhone?: string): Prom
       : '/api/orders';
     const json = await apiFetch<any>(endpoint);
     if (json && json.success && Array.isArray(json.data)) {
-      return json.data.map((o: any): CustomerOrder => ({
+      const orders = json.data.map((o: any): CustomerOrder => ({
         orderId: o.orderId,
         invoiceNumber: o.invoiceNumber || `INV-${o.orderId}`,
         date: o.createdAt
           ? new Date(o.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-          : new Date().toLocaleDateString('en-IN'),
+          : (o.date || new Date().toLocaleDateString('en-IN')),
         status: (o.status || 'Confirmed') as OrderStatus,
         expectedDelivery: o.expectedDelivery || 'Expected delivery in 2-3 days',
         trackingNumber: o.trackingNumber || `DLV-${o.orderId}`,
@@ -527,18 +558,69 @@ export async function fetchPuppyOrdersFromSupabase(customerPhone?: string): Prom
         adCampaignId: o.adCampaignId,
         adCampaignName: o.adCampaignName,
       }));
+
+      // Cache safely into localStorage
+      try {
+        localStorage.setItem('voraeclat_customer_orders', JSON.stringify(orders));
+      } catch {
+        // ignore
+      }
+
+      return orders;
+    }
+
+    // Offline / fallback to local storage
+    try {
+      const stored = localStorage.getItem('voraeclat_customer_orders') || localStorage.getItem('puppy_shame_customer_orders');
+      if (stored) return JSON.parse(stored);
+    } catch {
+      // ignore
     }
     return [];
   } catch {
+    try {
+      const stored = localStorage.getItem('voraeclat_customer_orders') || localStorage.getItem('puppy_shame_customer_orders');
+      if (stored) return JSON.parse(stored);
+    } catch {
+      // ignore
+    }
     return [];
   }
 }
 
 export async function insertPuppyOrderToSupabase(order: CustomerOrder): Promise<boolean> {
   try {
+    const payload = {
+      orderId: order.orderId,
+      invoiceNumber: order.invoiceNumber,
+      customerName: order.deliveryAddress?.name || 'Customer',
+      customerMobile: order.deliveryAddress?.phone || '+91 9999999999',
+      deliveryAddress: order.deliveryAddress,
+      billingAddress: order.deliveryAddress,
+      items: (order.items || []).map((it: any) => ({
+        productId: it.productId || it.id || 'PRD-DEFAULT',
+        productName: it.productName || it.name || 'Voraeclat Item',
+        price: Number(it.price) || 499,
+        quantity: Number(it.quantity) || 1,
+        size: it.size || 'Standard',
+        color: it.color || '',
+        imageUrl: it.imageUrl || it.image || '/voraeclat-mark.png',
+      })),
+      totalAmount: order.totalAmount,
+      subTotal: order.subTotal || order.totalAmount,
+      discountAmount: order.discountAmount || 0,
+      paymentMode: order.paymentMode || order.paymentMethod || 'COD',
+      paymentMethod: order.paymentMethod || 'COD',
+      courierPartner: order.courierPartner || 'Delhivery',
+      awbNumber: order.awbNumber || order.trackingNumber,
+      trackingNumber: order.trackingNumber,
+      expectedDelivery: order.expectedDelivery,
+      status: order.status || 'Confirmed',
+    };
+
     const res = await apiFetch<any>('/api/orders', {
       method: 'POST',
-      body: JSON.stringify(order),
+      body: JSON.stringify(payload),
     });
     return Boolean(res && res.success);
   } catch {
