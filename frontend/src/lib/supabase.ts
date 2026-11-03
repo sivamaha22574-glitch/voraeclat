@@ -759,14 +759,18 @@ export async function verifyAdminInSupabase(
       // ignore
     }
 
-    // Default admin fallback
-    if (cleanUser.toLowerCase() === 'admin' && cleanPass === 'admin') {
+    // Default admin fallbacks (mayilvanan or admin)
+    if (
+      (cleanUser.toLowerCase() === 'mayilvanan' && cleanPass === 'Mayil@1101') ||
+      (cleanUser.toLowerCase() === 'admin' && cleanPass === 'admin')
+    ) {
+      const isMayil = cleanUser.toLowerCase() === 'mayilvanan';
       return {
         valid: true,
         user: {
-          username: 'admin',
-          fullName: 'Chief Executive Administrator',
-          email: 'admin@voraeclat.com',
+          username: isMayil ? 'mayilvanan' : 'admin',
+          fullName: isMayil ? 'Mayilvanan' : 'Chief Executive Administrator',
+          email: isMayil ? 'mayilvanan@voraeclat.com' : 'admin@voraeclat.com',
           role: 'Super Admin',
         },
       };
@@ -774,13 +778,17 @@ export async function verifyAdminInSupabase(
 
     return { valid: false, message: json?.message || 'Invalid administrator username or password' };
   } catch (err: any) {
-    if (username.trim().toLowerCase() === 'admin' && password.trim() === 'admin') {
+    if (
+      (username.trim().toLowerCase() === 'mayilvanan' && password.trim() === 'Mayil@1101') ||
+      (username.trim().toLowerCase() === 'admin' && password.trim() === 'admin')
+    ) {
+      const isMayil = username.trim().toLowerCase() === 'mayilvanan';
       return {
         valid: true,
         user: {
-          username: 'admin',
-          fullName: 'Chief Administrator',
-          email: 'admin@voraeclat.com',
+          username: isMayil ? 'mayilvanan' : 'admin',
+          fullName: isMayil ? 'Mayilvanan' : 'Chief Administrator',
+          email: isMayil ? 'mayilvanan@voraeclat.com' : 'admin@voraeclat.com',
           role: 'Super Admin',
         },
       };
@@ -872,6 +880,12 @@ export async function fetchAdminUsersFromSupabase(): Promise<AdminUser[] | null>
     }
     return [
       {
+        username: 'mayilvanan',
+        fullName: 'Mayilvanan',
+        email: 'mayilvanan@voraeclat.com',
+        role: 'Super Admin',
+      },
+      {
         username: 'admin',
         fullName: 'Chief Executive Administrator',
         email: 'admin@voraeclat.com',
@@ -880,6 +894,12 @@ export async function fetchAdminUsersFromSupabase(): Promise<AdminUser[] | null>
     ];
   } catch {
     return [
+      {
+        username: 'mayilvanan',
+        fullName: 'Mayilvanan',
+        email: 'mayilvanan@voraeclat.com',
+        role: 'Super Admin',
+      },
       {
         username: 'admin',
         fullName: 'Chief Executive Administrator',

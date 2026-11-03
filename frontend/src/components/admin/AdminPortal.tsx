@@ -307,6 +307,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           try {
             localStorage.setItem('puppy_shame_admin_auth', 'true');
             localStorage.setItem('puppy_shame_admin_username', verifyRes.user?.username || u);
+            localStorage.setItem(
+              'puppy_shame_admin_credentials',
+              JSON.stringify({ username: verifyRes.user?.username || u, password: p })
+            );
           } catch {
             // ignore
           }
