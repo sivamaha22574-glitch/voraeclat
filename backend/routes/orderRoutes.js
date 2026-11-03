@@ -17,7 +17,8 @@ router.route('/customer/:identifier')
   .get(getCustomerOrders);
 
 router.route('/:id')
-  .get(getOrderById);
+  .get(getOrderById)
+  .put(updateOrderStatus);
 
 router.route('/:id/status')
   .put(updateOrderStatus);

@@ -630,20 +630,32 @@ export async function insertPuppyOrderToSupabase(order: CustomerOrder): Promise<
 
 export async function updatePuppyOrderStatusInSupabase(
   orderId: string,
-  status: OrderStatus,
-  courierPartner?: string,
+  status: OrderStatus | any,
+  courierPartnerOrExtra?: any,
   trackingNumber?: string,
   expectedDelivery?: string
 ): Promise<boolean> {
   try {
+    let payload: Record<string, any> = {};
+
+    if (typeof status === 'string') {
+      payload.status = status;
+    } else if (status && typeof status === 'object') {
+      payload = { ...status };
+    }
+
+    if (courierPartnerOrExtra && typeof courierPartnerOrExtra === 'object') {
+      payload = { ...payload, ...courierPartnerOrExtra };
+    } else if (typeof courierPartnerOrExtra === 'string') {
+      payload.courierPartner = courierPartnerOrExtra;
+    }
+
+    if (trackingNumber) payload.trackingNumber = trackingNumber;
+    if (expectedDelivery) payload.expectedDelivery = expectedDelivery;
+
     const res = await apiFetch<any>(`/api/orders/${orderId}/status`, {
       method: 'PUT',
-      body: JSON.stringify({
-        status,
-        courierPartner,
-        trackingNumber,
-        expectedDelivery,
-      }),
+      body: JSON.stringify(payload),
     });
     return Boolean(res && res.success);
   } catch {

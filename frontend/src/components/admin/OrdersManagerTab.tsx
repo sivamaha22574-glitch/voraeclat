@@ -149,11 +149,7 @@ export const OrdersManagerTab: React.FC<OrdersManagerTabProps> = ({
       return o;
     });
     onUpdateOrders(updated);
-    fetch(`/api/orders/${orderId}/status`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ courierPartner: courier })
-    }).catch(console.warn);
+    updatePuppyOrderStatusInSupabase(orderId, { courierPartner: courier }).catch(console.warn);
 
     if (selectedOrder && selectedOrder.orderId === orderId) {
       setSelectedOrder({ ...selectedOrder, courierPartner: courier });

@@ -297,11 +297,13 @@ export const updateOrderStatus = async (req, res) => {
       if (deliveryOtp) updateFields.deliveryOtp = deliveryOtp;
     }
 
+    const updateDoc = { $set: updateFields };
+
     if (status === 'Delivery Pending') {
       if (deliveryPendingReason) updateFields.deliveryPendingReason = deliveryPendingReason;
       updateFields.lastAttemptAt = new Date();
       if (rescheduledDeliveryDate) updateFields.rescheduledDeliveryDate = new Date(rescheduledDeliveryDate);
-      updateFields.$inc = { deliveryAttemptsCount: 1 };
+      updateDoc.$inc = { deliveryAttemptsCount: 1 };
     }
 
     if (status === 'Delivered') {
@@ -325,7 +327,7 @@ export const updateOrderStatus = async (req, res) => {
           ...(id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])
         ]
       },
-      updateFields,
+      updateDoc,
       { new: true }
     );
 
