@@ -308,12 +308,31 @@ export default function App() {
       }
     });
 
-    // 3. Fetch live active coupons from MongoDB Atlas
+    // 3. Periodic background order sync: guarantees all orders in localStorage sync to MongoDB Atlas
+    const orderSyncInterval = setInterval(() => {
+      const localOrders = getStoredOrders();
+      if (localOrders && localOrders.length > 0) {
+        fetchOrdersFromMongo().then((remoteOrders) => {
+          if (remoteOrders) {
+            const remoteIds = new Set(remoteOrders.map((o) => o.orderId));
+            localOrders.forEach((lo) => {
+              if (!remoteIds.has(lo.orderId)) {
+                insertOrderToMongo(lo).catch(console.warn);
+              }
+            });
+          }
+        }).catch(() => {});
+      }
+    }, 15000);
+
+    // 4. Fetch live active coupons from MongoDB Atlas
     fetchCouponsFromMongo().then((coupons) => {
       if (coupons && coupons.length > 0) {
         setActiveCoupons(coupons);
       }
     });
+
+    return () => clearInterval(orderSyncInterval);
   }, []);
 
   const handleOpenCustomerLogin = (intent: 'orders' | 'general' | 'checkout' = 'general') => {

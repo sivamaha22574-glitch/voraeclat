@@ -11,9 +11,12 @@ import { FranchiseLead } from '../data/franchiseLeads';
 
 // Dynamic base URL resolver: works whether running on Vite (5173), Express (5000), or cloud
 const getApiBase = (): string => {
-  if (typeof window !== 'undefined' && window.location && window.location.origin) {
-    // If running on Vite dev server port 5173, fallback directly to localhost:5000 if needed
-    return '';
+  if (typeof window !== 'undefined' && window.location) {
+    const { port, hostname, protocol } = window.location;
+    // If running on Vite dev server (5173, 5174, etc.) or external dev port, connect directly to backend port 5000
+    if (port && port !== '5000') {
+      return `${protocol}//${hostname || 'localhost'}:5000`;
+    }
   }
   return '';
 };
