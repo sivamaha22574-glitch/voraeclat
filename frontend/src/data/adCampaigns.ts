@@ -2,6 +2,7 @@ import { CategoryId } from '../types';
 import {
   upsertAdCampaignToMongo,
   upsertCouponToMongo,
+  savePuppySiteContent,
 } from '../lib/mongoApi';
 
 export type AdType = 'hero_banner' | 'festive_promo' | 'announcement_bar' | 'flash_deal' | 'category_spotlight';

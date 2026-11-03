@@ -124,7 +124,7 @@ export const OrdersManagerTab: React.FC<OrdersManagerTabProps> = ({
     }
 
     // Sync to MongoDB Atlas
-    updateOrderStatusInMongo(orderId, newStatus, courier as string).catch(console.warn);
+    updateOrderStatusInMongo(orderId, newStatus, selectedOrder?.courierPartner || undefined).catch(console.warn);
 
     if (selectedOrder && selectedOrder.orderId === orderId) {
       setSelectedOrder({

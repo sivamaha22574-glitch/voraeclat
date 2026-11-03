@@ -155,15 +155,20 @@ export async function fetchBannersFromMongo(): Promise<SiteBanner[] | null> {
     if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
       return json.data.map((b: any): SiteBanner => ({
         id: b.customId || b.id || b._id,
+        name: b.name || b.title || 'Banner',
+        location: b.location || 'home',
+        group: b.group || 'hero',
+        badge: b.badge || b.badgeText || '',
         title: b.title,
-        subtitle: b.subtitle || '',
+        underText: b.underText || b.subtitle || '',
         imageUrl: b.imageUrl,
-        linkUrl: b.linkUrl || '',
-        badgeText: b.badgeText || '',
-        ctaText: b.ctaText || 'Shop Now',
-        accentColor: b.accentColor || 'amber',
-        isActive: Boolean(b.isActive !== false),
-        placement: b.placement || 'home_hero',
+        buttonText: b.buttonText || b.ctaText || 'Shop Now',
+        buttonLink: b.buttonLink || b.linkUrl || '',
+        priceTag: b.priceTag,
+        originalPriceTag: b.originalPriceTag,
+        discountTag: b.discountTag,
+        couponCode: b.couponCode,
+        styleHighlights: b.styleHighlights,
       }));
     }
     return null;
@@ -210,24 +215,28 @@ export async function fetchAdCampaignsFromMongo(): Promise<AdCampaign[] | null> 
       return json.data.map((c: any): AdCampaign => ({
         id: c.customId || c.id || c._id,
         name: c.name,
+        type: c.type || 'banner',
         badge: c.badge || 'PROMO',
-        headline: c.headline,
+        title: c.title || c.headline || '',
+        highlight: c.highlight || '',
         description: c.description || '',
-        imageUrl: c.imageUrl,
+        category: c.category || c.targetCategory || 'baby',
         ctaText: c.ctaText || 'Shop Collection',
-        ctaLink: c.ctaLink || '/#shop',
-        targetCategory: c.targetCategory || 'all',
-        discountCode: c.discountCode || '',
-        discountPercent: Number(c.discountPercent || 0),
-        discountFlat: Number(c.discountFlat || 0),
-        minOrderAmount: Number(c.minOrderAmount || 0),
-        status: c.status || 'Active',
+        couponCode: c.couponCode || c.discountCode || '',
+        discountBadge: c.discountBadge || '',
+        imageUrl: c.imageUrl,
+        accentColor: c.accentColor || 'from-amber-500 to-yellow-400',
+        themeHue: c.themeHue || '#f59e0b',
+        status: (c.status?.toLowerCase() === 'active' ? 'active' : c.status?.toLowerCase() === 'paused' ? 'paused' : 'scheduled') as any,
         startDate: c.startDate || new Date().toISOString(),
         endDate: c.endDate || new Date(Date.now() + 30 * 86400000).toISOString(),
+        budget: Number(c.budget || 5000),
+        spend: Number(c.spend || 0),
         impressions: Number(c.impressions || 0),
         clicks: Number(c.clicks || 0),
         conversions: Number(c.conversions || 0),
-        revenueGenerated: Number(c.revenueGenerated || 0),
+        revenue: Number(c.revenue || c.revenueGenerated || 0),
+        priority: Number(c.priority || 1),
       }));
     }
     return null;
@@ -267,18 +276,15 @@ export async function fetchCouponsFromMongo(): Promise<PromoCoupon[] | null> {
     const json = await apiFetch<any>('/api/coupons');
     if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
       return json.data.map((c: any): PromoCoupon => ({
-        id: c.customId || c.id || c._id,
         code: c.code,
         title: c.title,
-        description: c.description || '',
-        discountPercent: Number(c.discountPercent || 0),
-        discountFlat: Number(c.discountFlat || 0),
-        minOrderAmount: Number(c.minOrderAmount || 0),
-        maxDiscount: Number(c.maxDiscount || 0),
-        validUntil: c.validUntil || '',
-        isActive: Boolean(c.isActive !== false),
+        discountType: c.discountType || (c.discountPercent ? 'percent' : 'flat'),
+        discountValue: Number(c.discountValue || c.discountPercent || c.discountFlat || 10),
+        minCartValue: Number(c.minCartValue || c.minOrderAmount || 499),
+        expiry: c.expiry || c.validUntil || '2026-12-31',
+        status: c.status || (c.isActive === false ? 'disabled' : 'active'),
         usageCount: Number(c.usageCount || 0),
-        exclusiveClubOnly: Boolean(c.exclusiveClubOnly),
+        maxUses: Number(c.maxUses || 1000),
       }));
     }
     return null;
@@ -293,7 +299,7 @@ export async function upsertCouponToMongo(coupon: PromoCoupon): Promise<boolean>
       method: 'POST',
       body: JSON.stringify({
         ...coupon,
-        customId: coupon.id,
+        customId: coupon.code,
       }),
     });
     return Boolean(json && (json.success || json.data));
@@ -326,24 +332,21 @@ export async function validateCouponInMongo(
 
   // Built-in verified promos
   const clean = code.trim().toUpperCase();
-  if (clean === 'FIRST10' || clean === 'KIDS10') {
+  if (clean === 'FIRST10' || clean === 'KIDS10' || clean === 'WELCOME10') {
     const disc = Math.round(orderSubtotal * 0.1);
     return {
       valid: true,
       discount: disc,
       coupon: {
-        id: 'cpn-first10',
         code: clean,
         title: '10% Welcome Discount',
-        description: 'Enjoy 10% off your purchase',
-        discountPercent: 10,
-        discountFlat: 0,
-        minOrderAmount: 499,
-        maxDiscount: 500,
-        validUntil: '2026-12-31',
-        isActive: true,
+        discountType: 'percent',
+        discountValue: 10,
+        minCartValue: 499,
+        expiry: '2026-12-31',
+        status: 'active',
         usageCount: 1,
-        exclusiveClubOnly: false,
+        maxUses: 1000,
       },
       message: '10% discount applied!',
     };
@@ -361,17 +364,15 @@ export async function fetchCustomersFromMongo(): Promise<CustomerUser[] | null> 
     const json = await apiFetch<any>('/api/users');
     if (json && json.success && Array.isArray(json.data)) {
       return json.data.map((u: any): CustomerUser => ({
-        id: u.customId || u.id || u._id,
+        mobile: u.phone || u.mobile || '',
         name: u.name,
-        phone: u.phone,
         email: u.email || '',
-        addresses: u.addresses || [],
-        isClubMember: Boolean(u.isClubMember),
-        clubTier: u.clubTier || (u.isClubMember ? 'VIP Gold' : undefined),
-        clubValidUntil: u.clubValidUntil,
-        loyaltyPoints: Number(u.loyaltyPoints || 0),
-        savedCards: u.savedCards || [],
+        address: u.address || (Array.isArray(u.addresses) ? u.addresses[0]?.addressLine : ''),
+        city: u.city || (Array.isArray(u.addresses) ? u.addresses[0]?.city : ''),
+        pincode: u.pincode || (Array.isArray(u.addresses) ? u.addresses[0]?.pincode : ''),
         isLoggedIn: true,
+        notifyOffers: Boolean(u.notifyOffers !== false),
+        joinedDate: u.joinedDate || u.createdAt || new Date().toISOString(),
       }));
     }
     return null;
@@ -386,17 +387,15 @@ export async function fetchCustomerByPhone(phone: string): Promise<CustomerUser 
     if (json && json.success && json.data) {
       const u = json.data;
       return {
-        id: u.customId || u.id || u._id,
+        mobile: u.phone || u.mobile || '',
         name: u.name,
-        phone: u.phone,
         email: u.email || '',
-        addresses: u.addresses || [],
-        isClubMember: Boolean(u.isClubMember),
-        clubTier: u.clubTier || (u.isClubMember ? 'VIP Gold' : undefined),
-        clubValidUntil: u.clubValidUntil,
-        loyaltyPoints: Number(u.loyaltyPoints || 0),
-        savedCards: u.savedCards || [],
+        address: u.address || (Array.isArray(u.addresses) ? u.addresses[0]?.addressLine : ''),
+        city: u.city || (Array.isArray(u.addresses) ? u.addresses[0]?.city : ''),
+        pincode: u.pincode || (Array.isArray(u.addresses) ? u.addresses[0]?.pincode : ''),
         isLoggedIn: true,
+        notifyOffers: Boolean(u.notifyOffers !== false),
+        joinedDate: u.joinedDate || u.createdAt || new Date().toISOString(),
       };
     }
     return null;
@@ -415,7 +414,8 @@ export async function upsertCustomerToMongo(customer: CustomerUser): Promise<boo
       method: 'POST',
       body: JSON.stringify({
         ...customer,
-        customId: customer.id,
+        phone: customer.mobile,
+        customId: customer.mobile,
       }),
     });
     return Boolean(json && (json.success || json.data));
@@ -1002,5 +1002,5 @@ export async function deleteAdminUserInMongo(adminId: string): Promise<{ success
   }
 }
 
-export const fetchPuppySiteContent = async () => null;
-export const savePuppySiteContent = async () => true;
+export const fetchPuppySiteContent = async (..._args: any[]) => null;
+export const savePuppySiteContent = async (..._args: any[]) => true;

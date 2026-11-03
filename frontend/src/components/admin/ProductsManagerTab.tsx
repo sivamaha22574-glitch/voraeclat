@@ -1715,7 +1715,7 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleOpenMarkingArea(editingProduct)}
+                  onClick={() => editingProduct && handleOpenMarkingArea(editingProduct)}
                   className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors shrink-0"
                 >
                   <ImageIcon className="w-3.5 h-3.5 text-indigo-200" />
@@ -2028,7 +2028,7 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleOpenMarkingArea(editingProduct)}
+                  onClick={() => editingProduct && handleOpenMarkingArea(editingProduct)}
                   className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors shrink-0"
                 >
                   <ImageIcon className="w-3.5 h-3.5 text-indigo-200" />

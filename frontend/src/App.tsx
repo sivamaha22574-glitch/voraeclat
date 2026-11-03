@@ -487,7 +487,7 @@ export default function App() {
       if (result.valid) {
         setAppliedCoupon(normalized);
         if (result.coupon) setAppliedCouponDetails(result.coupon);
-        showToast(result.message);
+        showToast(result.message || 'Coupon applied successfully!');
         return true;
       } else {
         // Fallback for offline or fast responses
