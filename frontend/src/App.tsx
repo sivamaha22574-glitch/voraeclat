@@ -355,21 +355,20 @@ export default function App() {
     showToast('Profile and address updated successfully!');
   };
 
-  const handleOrderPlaced = (newOrder: CustomerOrder) => {
+  const handleOrderPlaced = async (newOrder: CustomerOrder) => {
     const updated = appendCustomerOrder(newOrder);
     setCustomerOrders(updated);
     showToast(`Order #${newOrder.orderId} placed! Tracking details generated.`);
-    // Sync directly to MongoDB Atlas backend & refresh
-    insertOrderToMongo(newOrder)
-      .then(() => fetchOrdersFromMongo())
-      .then((remoteOrders) => {
-        if (remoteOrders && remoteOrders.length > 0) {
-          setCustomerOrders(remoteOrders);
-        }
-      })
-      .catch((err) => {
-        console.warn('Failed to sync placed order to MongoDB:', err);
-      });
+    try {
+      // Sync directly to MongoDB Atlas backend & refresh
+      await insertOrderToMongo(newOrder);
+      const remoteOrders = await fetchOrdersFromMongo();
+      if (remoteOrders && remoteOrders.length > 0) {
+        setCustomerOrders(remoteOrders);
+      }
+    } catch (err) {
+      console.warn('Failed to sync placed order to MongoDB:', err);
+    }
   };
 
   const handleReorder = (order: CustomerOrder) => {
