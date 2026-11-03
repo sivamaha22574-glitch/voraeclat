@@ -338,10 +338,12 @@ export const updateOrderStatus = async (req, res) => {
     );
 
     if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found' });
+      console.warn(`[MongoDB Order Update]: Matched: 0, Modified: 0 | id: "${id}"`);
+      return res.status(404).json({ success: false, matchedCount: 0, modifiedCount: 0, message: 'Order not found' });
     }
 
-    res.json({ success: true, data: order });
+    console.log(`[MongoDB Order Update]: Matched: 1, Modified: 1 | Order: ${order.orderId} | New Status: ${order.status}`);
+    res.json({ success: true, matchedCount: 1, modifiedCount: 1, data: order });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }

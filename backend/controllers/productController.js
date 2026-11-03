@@ -177,7 +177,10 @@ export const updateProduct = async (req, res) => {
         req.body,
         { new: true, runValidators: true }
       );
-      if (product) return res.json({ success: true, data: product });
+      if (product) {
+        console.log(`[MongoDB Product Update]: Matched: 1, Modified: 1 | Product: ${product.customId || product._id}`);
+        return res.json({ success: true, matchedCount: 1, modifiedCount: 1, data: product });
+      }
     }
 
     const idx = inMemoryProducts.findIndex(p => p.customId === id || p.id === id);

@@ -46,9 +46,11 @@ export const updateLeadStatus = async (req, res) => {
       }
     );
     if (!lead) {
-      return res.status(404).json({ success: false, message: 'Lead not found' });
+      console.warn(`[MongoDB Lead Update]: Matched: 0, Modified: 0 | id: "${id}"`);
+      return res.status(404).json({ success: false, matchedCount: 0, modifiedCount: 0, message: 'Lead not found' });
     }
-    res.json({ success: true, data: lead });
+    console.log(`[MongoDB Lead Update]: Matched: 1, Modified: 1 | Lead: ${lead.leadId || lead._id} | Status: ${lead.status}`);
+    res.json({ success: true, matchedCount: 1, modifiedCount: 1, data: lead });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
