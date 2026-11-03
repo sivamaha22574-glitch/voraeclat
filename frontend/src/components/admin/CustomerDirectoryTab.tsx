@@ -12,7 +12,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { CustomerUser, CustomerOrder } from '../../types';
-import { fetchPuppyCustomersFromSupabase } from '../../lib/supabase';
+import { fetchCustomersFromMongo } from '../../lib/mongoApi';
 
 interface CustomerDirectoryTabProps {
   currentCustomer: CustomerUser | null;
@@ -40,17 +40,17 @@ export const CustomerDirectoryTab: React.FC<CustomerDirectoryTabProps> = ({
   const [remoteCustomers, setRemoteCustomers] = useState<CustomerUser[]>([]);
 
   useEffect(() => {
-    fetchPuppyCustomersFromSupabase().then((custs) => {
+    fetchCustomersFromMongo().then((custs) => {
       if (custs && custs.length > 0) {
         setRemoteCustomers(custs);
       }
     });
   }, []);
 
-  // Build customer list strictly from real Supabase customer profiles and genuine orders
+  // Build customer list strictly from real MongoDB Atlas customer profiles and genuine orders
   const customerMap = new Map<string, MockCustomerProfile>();
 
-  // 1. Add real registered customers from Supabase
+  // 1. Add real registered customers from MongoDB Atlas
   remoteCustomers.forEach((rc) => {
     const cleanMobile = rc.mobile.replace(/\s+/g, '');
     const userOrders = orders.filter((o) => o.deliveryAddress.phone.replace(/\s+/g, '').includes(cleanMobile.slice(-10)));

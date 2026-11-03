@@ -35,6 +35,7 @@ import { PRODUCTS, getStoredProducts, saveStoredProducts } from '../../data/prod
 import { BOY_FASHION_CATEGORIES } from '../BoyFashionMegaMenu';
 import { GIRL_FASHION_CATEGORIES } from '../GirlFashionMegaMenu';
 import { CURATED_COLLECTIONS } from '../CollectionsMegaMenu';
+import { upsertProductToMongo, deleteProductFromMongo } from '../../lib/mongoApi';
 
 /**
  * Utility: Compresses user-uploaded image to a lightweight JPEG Data URL
@@ -737,10 +738,11 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
 
     const updated = productList.map((p) => (p.id === markingAreaProduct.id ? updatedProduct : p));
     updateCatalog(updated);
+    upsertProductToMongo(updatedProduct).catch(console.warn);
     if (editingProduct && editingProduct.id === markingAreaProduct.id) {
       setEditingProduct(updatedProduct);
     }
-    onNotify(`✨ Marking area photos & style highlights saved for "${updatedProduct.name.slice(0, 22)}..."!`);
+    onNotify(`✨ Marking area photos & style highlights saved to MongoDB Atlas for "${updatedProduct.name.slice(0, 22)}..."!`);
     setMarkingAreaProduct(null);
   };
 
@@ -783,6 +785,7 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
 
     const updated = productList.map((p) => (p.id === editingProduct.id ? updatedProduct : p));
     updateCatalog(updated);
+    upsertProductToMongo(updatedProduct).catch(console.warn);
     onNotify(`Product "${updatedProduct.name.slice(0, 20)}..." updated successfully!`);
     setEditingProduct(null);
   };
@@ -864,6 +867,7 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
 
     const updated = [createdProduct, ...productList];
     updateCatalog(updated);
+    upsertProductToMongo(createdProduct).catch(console.warn);
 
     // CRITICAL: Ensure the newly added product is visible immediately in the view!
     setSelectedCategory(targetCatId);
@@ -881,6 +885,7 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
     if (confirm(`Are you sure you want to delete "${productName}" from the catalog?`)) {
       const updated = productList.filter((p) => p.id !== productId);
       updateCatalog(updated);
+      deleteProductFromMongo(productId).catch(console.warn);
       onNotify(`Product "${productName.slice(0, 20)}..." deleted.`);
     }
   };
@@ -1310,14 +1315,24 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                   >
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200 relative">
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenMarkingArea(p);
+                          }}
+                          className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200 relative group/thumb cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all shadow-2xs"
+                          title="📸 Click to edit 4 gallery photos & marking area style highlights"
+                        >
                           {p.imageUrl ? (
-                            <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                            <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover group-hover/thumb:scale-110 transition-transform duration-300" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-400">
                               <Package className="w-4 h-4" />
                             </div>
                           )}
+                          <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
+                            <Camera className="w-4 h-4 text-amber-300" />
+                          </div>
                         </div>
                         <div className="max-w-[240px]">
                           <div className="font-extrabold text-slate-900 line-clamp-1">{p.name}</div>
@@ -1400,11 +1415,11 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => handleOpenMarkingArea(p)}
-                          className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
-                          title="Edit 4 Gallery Photos & Style Highlights (Product Modal View)"
+                          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black text-xs transition-all shadow-xs cursor-pointer flex items-center gap-1.5 hover:scale-102"
+                          title="📸 Edit 4 Gallery Photos & Style Highlights (Product Modal View)"
                         >
-                          <ImageIcon className="w-3 h-3 text-indigo-600" />
-                          <span>Marking Area (Photos)</span>
+                          <Camera className="w-3.5 h-3.5 text-amber-300" />
+                          <span>📸 Edit Photos (Marking Area)</span>
                         </button>
                         <button
                           onClick={() => setQuickPriceEditProduct({ ...p })}

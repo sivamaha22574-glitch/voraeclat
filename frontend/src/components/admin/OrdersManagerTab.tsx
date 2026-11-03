@@ -21,7 +21,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { CustomerOrder, OrderStatus, CourierPartner, PaymentMode, DeliveryPendingReason } from '../../types';
-import { updatePuppyOrderStatusInSupabase, fetchPuppyOrdersFromSupabase } from '../../lib/supabase';
+import { updateOrderStatusInMongo, fetchOrdersFromMongo } from '../../lib/mongoApi';
 import { TaxInvoiceModal } from '../TaxInvoiceModal';
 
 interface OrdersManagerTabProps {
@@ -69,7 +69,7 @@ export const OrdersManagerTab: React.FC<OrdersManagerTabProps> = ({
   const refreshOrdersFromMongo = async (silent = false) => {
     if (!silent) setIsRefreshing(true);
     try {
-      const liveOrders = await fetchPuppyOrdersFromSupabase();
+      const liveOrders = await fetchOrdersFromMongo();
       if (liveOrders && liveOrders.length > 0) {
         onUpdateOrders(liveOrders);
         if (!silent) onNotify(`Synced ${liveOrders.length} live orders from MongoDB Atlas!`);
@@ -123,12 +123,8 @@ export const OrdersManagerTab: React.FC<OrdersManagerTabProps> = ({
       // ignore
     }
 
-    // Sync to MongoDB & Supabase
-    updatePuppyOrderStatusInSupabase(orderId, newStatus, {
-      deliveryPendingReason: pendingReason,
-      deliveryAgentName: agentName,
-      deliveryAgentPhone: agentPhone
-    }).catch(console.warn);
+    // Sync to MongoDB Atlas
+    updateOrderStatusInMongo(orderId, newStatus, courier as string).catch(console.warn);
 
     if (selectedOrder && selectedOrder.orderId === orderId) {
       setSelectedOrder({
@@ -149,7 +145,7 @@ export const OrdersManagerTab: React.FC<OrdersManagerTabProps> = ({
       return o;
     });
     onUpdateOrders(updated);
-    updatePuppyOrderStatusInSupabase(orderId, { courierPartner: courier }).catch(console.warn);
+    updateOrderStatusInMongo(orderId, (selectedOrder?.status || 'Shipped') as OrderStatus, courier).catch(console.warn);
 
     if (selectedOrder && selectedOrder.orderId === orderId) {
       setSelectedOrder({ ...selectedOrder, courierPartner: courier });

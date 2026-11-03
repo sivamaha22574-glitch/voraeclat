@@ -14,7 +14,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { CartItem, CustomerUser, CustomerOrder } from '../types';
-import { submitPuppyCheckoutOrder } from '../lib/supabase';
+import { submitCheckoutOrder } from '../lib/mongoApi';
 import { TaxInvoiceModal } from './TaxInvoiceModal';
 
 interface CheckoutModalProps {
@@ -130,7 +130,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         : 'Cash on Delivery (COD)';
 
     try {
-      const response = await submitPuppyCheckoutOrder({
+      const response = await submitCheckoutOrder({
         orderId: generatedOrder,
         customerName: fullName.trim(),
         customerPhone: phone.startsWith('+91') ? phone.trim() : `+91 ${phone.trim()}`,

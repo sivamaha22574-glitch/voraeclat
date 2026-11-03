@@ -35,12 +35,12 @@ import { FranchiseLeadsTab } from './FranchiseLeadsTab';
 import { CustomerDirectoryTab } from './CustomerDirectoryTab';
 import { AdminCredentialsTab } from './AdminCredentialsTab';
 import {
-  verifyAdminInSupabase,
-  updateAdminCredentialsInSupabase,
-  resetAdminCredentialsInSupabase,
-  fetchAdminUsersFromSupabase,
+  verifyAdminCredentials,
+  updateAdminCredentialsInMongo,
+  resetAdminCredentialsInMongo,
+  fetchAdminUsersFromMongo,
   AdminUser,
-} from '../../lib/supabase';
+} from '../../lib/mongoApi';
 import { CustomerOrder, CustomerUser, CategoryId, Product } from '../../types';
 
 interface AdminPortalProps {
@@ -127,7 +127,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setIsChangingCredentials(true);
     setChangeModalError(null);
     try {
-      const res = await resetAdminCredentialsInSupabase('admin', 'admin');
+      const res = await resetAdminCredentialsInMongo('admin', 'admin');
       if (res.success) {
         setAdminUsername('admin');
         setAdminPassword('admin');
@@ -187,9 +187,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     try {
       let res;
       if (currP) {
-        res = await updateAdminCredentialsInSupabase(currU, currP, newU, newP);
+        res = await updateAdminCredentialsInMongo(currU, currP, newU, newP);
       } else {
-        res = await resetAdminCredentialsInSupabase(newU, newP);
+        res = await resetAdminCredentialsInMongo(newU, newP);
       }
 
       if (res.success) {
@@ -225,11 +225,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     }
   };
 
-  // Fetch active admin from Supabase on mount
+  // Fetch active admin from MongoDB Atlas on mount
   useEffect(() => {
     const fetchActiveAdmin = async () => {
       try {
-        const users = await fetchAdminUsersFromSupabase();
+        const users = await fetchAdminUsersFromMongo();
         if (users && users.length > 0) {
           const primary = users.find((u) => u.role === 'Super Admin') || users[0];
           setAdminUsername(primary.username);
@@ -290,8 +290,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     const p = adminPassword.trim();
 
     try {
-      // 1. Direct Supabase verification
-      const verifyRes = await verifyAdminInSupabase(u, p);
+      // 1. Direct MongoDB Atlas verification
+      const verifyRes = await verifyAdminCredentials(u, p);
       if (verifyRes.valid) {
         setIsAuthenticated(true);
         if (verifyRes.user) {

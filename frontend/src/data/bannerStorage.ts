@@ -1,10 +1,10 @@
 import { SiteBanner, INITIAL_SITE_BANNERS, setCachedSiteBanners } from './siteBanners';
 import { AdCampaign, INITIAL_AD_CAMPAIGNS } from './adCampaigns';
 import {
-  fetchPuppyBannersFromSupabase,
-  upsertPuppyBannerToSupabase,
-  upsertPuppyAdCampaignToSupabase,
-} from '../lib/supabase';
+  fetchBannersFromMongo,
+  upsertBannerToMongo,
+  upsertAdCampaignToMongo,
+} from '../lib/mongoApi';
 
 const DB_NAME = 'puppy_shame_persistence_v2';
 const STORE_BANNERS = 'site_banners';
@@ -57,7 +57,7 @@ function getDB(): Promise<IDBDatabase | null> {
 }
 
 /**
- * Persist site banners to both local cache (IndexedDB + LocalStorage) and Supabase (Cloud Backend)
+ * Persist site banners to both local cache (IndexedDB + LocalStorage) and MongoDB Atlas (Cloud Backend)
  */
 export async function savePersistentBanners(banners: SiteBanner[]): Promise<void> {
   // 1. Update in-memory cache immediately
@@ -108,21 +108,14 @@ export async function savePersistentBanners(banners: SiteBanner[]): Promise<void
     broadcastChannel?.postMessage({ type: 'BANNERS_UPDATED', count: banners.length });
   }
 
-  // 5. Sync asynchronously to Supabase backend
+  // 5. Sync asynchronously to MongoDB Atlas backend
   Promise.all(
-    banners.map((b, idx) => upsertPuppyBannerToSupabase(b, idx))
-  ).catch((err) => console.warn('Supabase banner sync error:', err));
-
-  // 6. Sync to MongoDB Backend API
-  fetch('/api/banners', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(banners)
-  }).catch((err) => console.warn('MongoDB banner sync error:', err));
+    banners.map((b, idx) => upsertBannerToMongo(b, idx))
+  ).catch((err) => console.warn('MongoDB banner sync error:', err));
 }
 
 /**
- * Load site banners from IndexedDB / LocalStorage / Supabase
+ * Load site banners from IndexedDB / LocalStorage / MongoDB Atlas
  * Prioritizes local IndexedDB data so user customizations are NEVER overwritten by stale defaults!
  */
 export async function loadPersistentBanners(): Promise<SiteBanner[]> {
@@ -206,9 +199,9 @@ export async function loadPersistentBanners(): Promise<SiteBanner[]> {
     // fallback
   }
 
-  // 4. Fallback to Supabase cloud if local store is uninitialized
+  // 4. Fallback to MongoDB Atlas cloud if local store is uninitialized
   try {
-    const remoteBanners = await fetchPuppyBannersFromSupabase();
+    const remoteBanners = await fetchBannersFromMongo();
     if (remoteBanners && remoteBanners.length > 0) {
       setCachedSiteBanners(remoteBanners);
       try {
@@ -219,7 +212,7 @@ export async function loadPersistentBanners(): Promise<SiteBanner[]> {
       return remoteBanners;
     }
   } catch (err) {
-    console.warn('Supabase banners load notice:', err);
+    console.warn('MongoDB banners load notice:', err);
   }
 
   setCachedSiteBanners(INITIAL_SITE_BANNERS);
@@ -298,7 +291,7 @@ export async function syncHeroSlideUpdate(updatedHeroBanner: SiteBanner): Promis
     }
 
     localStorage.setItem(LOCAL_STORAGE_ADS, JSON.stringify(updatedCampaigns));
-    Promise.all(updatedCampaigns.map((c) => upsertPuppyAdCampaignToSupabase(c))).catch(console.warn);
+    Promise.all(updatedCampaigns.map((c) => upsertAdCampaignToMongo(c))).catch(console.warn);
     window.dispatchEvent(new Event('ad_campaigns_updated'));
   } catch (err) {
     console.warn('AdCampaign sync error:', err);

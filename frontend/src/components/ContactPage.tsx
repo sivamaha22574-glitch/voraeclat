@@ -23,7 +23,7 @@ import {
   Instagram,
   Share2,
 } from 'lucide-react';
-import { submitContactMessageToSupabase } from '../lib/supabase';
+import { submitContactMessageToMongo } from '../lib/mongoApi';
 
 interface ContactPageProps {
   onBackToHome: () => void;
@@ -63,15 +63,15 @@ export const ContactPage: React.FC<ContactPageProps> = ({
     const randomTicket = `PUPPY-${Math.floor(100000 + Math.random() * 900000)}`;
     setTicketId(randomTicket);
     setIsSubmitted(true);
-    // Asynchronously sync contact inquiry to Supabase
-    submitContactMessageToSupabase({
+    // Asynchronously sync contact inquiry to MongoDB Atlas
+    submitContactMessageToMongo({
       name: formData.name,
       email: formData.email,
       phone: formData.phone,
       subject: formData.orderId ? `${formData.subject} (Order #${formData.orderId})` : formData.subject,
       message: `[Ticket: ${randomTicket}] ${formData.message}`,
     }).catch((err) => {
-      console.warn('Failed to submit contact message to Supabase:', err);
+      console.warn('Failed to submit contact message to MongoDB:', err);
     });
   };
 

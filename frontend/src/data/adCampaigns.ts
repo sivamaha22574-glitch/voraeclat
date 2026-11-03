@@ -1,9 +1,8 @@
 import { CategoryId } from '../types';
 import {
-  upsertPuppyAdCampaignToSupabase,
-  upsertPuppyCouponToSupabase,
-  savePuppySiteContent,
-} from '../lib/supabase';
+  upsertAdCampaignToMongo,
+  upsertCouponToMongo,
+} from '../lib/mongoApi';
 
 export type AdType = 'hero_banner' | 'festive_promo' | 'announcement_bar' | 'flash_deal' | 'category_spotlight';
 
@@ -380,7 +379,7 @@ export const getStoredAdCampaigns = (): AdCampaign[] => {
 export const saveStoredAdCampaigns = (campaigns: AdCampaign[]): void => {
   try {
     localStorage.setItem(STORAGE_KEY_ADS, JSON.stringify(campaigns));
-    Promise.all(campaigns.map((c) => upsertPuppyAdCampaignToSupabase(c))).catch(console.warn);
+    Promise.all(campaigns.map((c) => upsertAdCampaignToMongo(c))).catch(console.warn);
   } catch {
     // ignore
   }
@@ -409,7 +408,7 @@ export const getStoredCoupons = (): PromoCoupon[] => {
 export const saveStoredCoupons = (coupons: PromoCoupon[]): void => {
   try {
     localStorage.setItem(STORAGE_KEY_COUPONS, JSON.stringify(coupons));
-    Promise.all(coupons.map((cp) => upsertPuppyCouponToSupabase(cp))).catch(console.warn);
+    Promise.all(coupons.map((cp) => upsertCouponToMongo(cp))).catch(console.warn);
   } catch {
     // ignore
   }

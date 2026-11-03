@@ -20,7 +20,7 @@ import {
   Compass,
 } from 'lucide-react';
 import { appendFranchiseLead } from '../data/franchiseLeads';
-import { insertPuppyFranchiseLeadToSupabase } from '../lib/supabase';
+import { insertFranchiseLeadToMongo } from '../lib/mongoApi';
 
 interface FranchisePartnerPageProps {
   onBackToStore?: () => void;
@@ -72,9 +72,9 @@ export const FranchisePartnerPage: React.FC<FranchisePartnerPageProps> = ({
     } catch {
       // ignore
     }
-    // Asynchronously sync to Supabase puppy_franchise_leads
-    insertPuppyFranchiseLeadToSupabase(newLead).catch((err) => {
-      console.warn('Failed to sync franchise lead to Supabase:', err);
+    // Asynchronously sync to MongoDB Atlas franchise leads
+    insertFranchiseLeadToMongo(newLead).catch((err) => {
+      console.warn('Failed to sync franchise lead to MongoDB:', err);
     });
     setIsSubmitted(true);
   };

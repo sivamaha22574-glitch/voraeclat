@@ -50,15 +50,15 @@ import { BgTheme, getThemeDisplayName } from './components/Header';
 import { ThemeModal } from './components/ThemeModal';
 import { AdminPortal } from './components/admin/AdminPortal';
 import {
-  fetchPuppyOrdersFromSupabase,
-  insertPuppyOrderToSupabase,
-  updatePuppyOrderStatusInSupabase,
-  fetchPuppyProductsFromSupabase,
-  upsertPuppyProductToSupabase,
-  fetchPuppyCouponsFromSupabase,
-  validatePuppyCouponInSupabase,
-  upsertPuppyCustomerToSupabase,
-} from './lib/supabase';
+  fetchOrdersFromMongo,
+  insertOrderToMongo,
+  updateOrderStatusInMongo,
+  fetchProductsFromMongo,
+  upsertProductToMongo,
+  fetchCouponsFromMongo,
+  validateCouponInMongo,
+  upsertCustomerToMongo,
+} from './lib/mongoApi';
 import { PromoCoupon } from './data/adCampaigns';
 import { loadPersistentBanners } from './data/bannerStorage';
 
@@ -272,18 +272,18 @@ export default function App() {
   const [activeCoupons, setActiveCoupons] = useState<PromoCoupon[]>([]);
   const [appliedCouponDetails, setAppliedCouponDetails] = useState<PromoCoupon | null>(null);
 
-  // Sync with live Supabase database on mount: Products, Orders, Coupons
+  // Sync with live MongoDB Atlas database on mount: Products, Orders, Coupons
   useEffect(() => {
-    // 1. Fetch live product catalog from Supabase
-    fetchPuppyProductsFromSupabase().then((remoteProducts) => {
+    // 1. Fetch live product catalog from MongoDB Atlas
+    fetchProductsFromMongo().then((remoteProducts) => {
       if (remoteProducts && remoteProducts.length > 0) {
         setAllProducts(remoteProducts);
         saveStoredProducts(remoteProducts);
       }
     });
 
-    // 2. Fetch live customer orders from MongoDB
-    fetchPuppyOrdersFromSupabase().then((remoteOrders) => {
+    // 2. Fetch live customer orders from MongoDB Atlas
+    fetchOrdersFromMongo().then((remoteOrders) => {
       if (remoteOrders && remoteOrders.length > 0) {
         setCustomerOrders(remoteOrders);
         try {
@@ -295,8 +295,8 @@ export default function App() {
       }
     });
 
-    // 3. Fetch live active coupons from Supabase
-    fetchPuppyCouponsFromSupabase().then((coupons) => {
+    // 3. Fetch live active coupons from MongoDB Atlas
+    fetchCouponsFromMongo().then((coupons) => {
       if (coupons && coupons.length > 0) {
         setActiveCoupons(coupons);
       }
@@ -321,7 +321,7 @@ export default function App() {
   const handleLoginSuccess = (user: CustomerUser) => {
     setCustomer(user);
     saveStoredCustomer(user);
-    upsertPuppyCustomerToSupabase(user).catch(console.warn);
+    upsertCustomerToMongo(user).catch(console.warn);
     showToast(`Welcome ${user.name || user.mobile}! 10% OFF code WELCOME10 unlocked ✨`);
     if (customerLoginIntent === 'orders') {
       setIsCustomerAccountOpen(true);
@@ -338,7 +338,7 @@ export default function App() {
   const handleUpdateCustomer = (updated: CustomerUser) => {
     setCustomer(updated);
     saveStoredCustomer(updated);
-    upsertPuppyCustomerToSupabase(updated).catch(console.warn);
+    upsertCustomerToMongo(updated).catch(console.warn);
     showToast('Profile and address updated successfully!');
   };
 
@@ -347,8 +347,8 @@ export default function App() {
     setCustomerOrders(updated);
     showToast(`Order #${newOrder.orderId} placed! Tracking details generated.`);
     // Sync directly to MongoDB Atlas backend & refresh
-    insertPuppyOrderToSupabase(newOrder)
-      .then(() => fetchPuppyOrdersFromSupabase())
+    insertOrderToMongo(newOrder)
+      .then(() => fetchOrdersFromMongo())
       .then((remoteOrders) => {
         if (remoteOrders && remoteOrders.length > 0) {
           setCustomerOrders(remoteOrders);
@@ -446,13 +446,13 @@ export default function App() {
     setWishlist((prev) => prev.filter((p) => p.id !== product.id));
   };
 
-  // Coupon Engine: Validates against live Supabase backend
+  // Coupon Engine: Validates against live MongoDB Atlas backend
   const handleApplyCoupon = async (code: string) => {
     const normalized = code.trim().toUpperCase();
     if (!normalized) return false;
 
     try {
-      const result = await validatePuppyCouponInSupabase(normalized, rawCartTotal);
+      const result = await validateCouponInMongo(normalized, rawCartTotal);
       if (result.valid) {
         setAppliedCoupon(normalized);
         if (result.coupon) setAppliedCouponDetails(result.coupon);
@@ -1062,9 +1062,9 @@ export default function App() {
             } catch {
               // ignore
             }
-            // Sync status changes to Supabase puppy_orders
+            // Sync status changes to MongoDB Atlas
             updated.forEach((ord) => {
-              updatePuppyOrderStatusInSupabase(ord.orderId, ord.status);
+              updateOrderStatusInMongo(ord.orderId, ord.status);
             });
           }}
           currentCustomer={customer}
@@ -1072,7 +1072,7 @@ export default function App() {
           onUpdateProducts={(updated) => {
             setAllProducts(updated);
             saveStoredProducts(updated);
-            Promise.all(updated.map((p) => upsertPuppyProductToSupabase(p))).catch(console.warn);
+            Promise.all(updated.map((p) => upsertProductToMongo(p))).catch(console.warn);
           }}
           onPreviewCategory={(cat) => {
             setActiveCategory(cat);

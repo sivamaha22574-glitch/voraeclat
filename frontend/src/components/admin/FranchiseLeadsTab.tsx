@@ -20,9 +20,9 @@ import {
   saveStoredFranchiseLeads,
 } from '../../data/franchiseLeads';
 import {
-  fetchPuppyFranchiseLeadsFromSupabase,
-  updatePuppyFranchiseLeadInSupabase,
-} from '../../lib/supabase';
+  fetchFranchiseLeadsFromMongo,
+  updateFranchiseLeadInMongo,
+} from '../../lib/mongoApi';
 
 interface FranchiseLeadsTabProps {
   onNotify: (msg: string) => void;
@@ -34,9 +34,9 @@ export const FranchiseLeadsTab: React.FC<FranchiseLeadsTabProps> = ({ onNotify }
   const [searchQuery, setSearchQuery] = useState('');
   const [activeLead, setActiveLead] = useState<FranchiseLead | null>(null);
 
-  // Sync with live Supabase on mount
+  // Sync with live MongoDB Atlas on mount
   useEffect(() => {
-    fetchPuppyFranchiseLeadsFromSupabase().then((remoteLeads) => {
+    fetchFranchiseLeadsFromMongo().then((remoteLeads) => {
       if (remoteLeads && remoteLeads.length > 0) {
         setLeads(remoteLeads);
         saveStoredFranchiseLeads(remoteLeads);
@@ -51,8 +51,8 @@ export const FranchiseLeadsTab: React.FC<FranchiseLeadsTabProps> = ({ onNotify }
     if (activeLead && activeLead.id === leadId) {
       setActiveLead({ ...activeLead, status: nextStatus });
     }
-    // Sync to Supabase
-    updatePuppyFranchiseLeadInSupabase(leadId, nextStatus);
+    // Sync to MongoDB Atlas
+    updateFranchiseLeadInMongo(leadId, { status: nextStatus });
     onNotify(`Partner Lead #${leadId} updated to ${nextStatus}`);
   };
 
@@ -61,9 +61,9 @@ export const FranchiseLeadsTab: React.FC<FranchiseLeadsTabProps> = ({ onNotify }
     setLeads(updated);
     saveStoredFranchiseLeads(updated);
     const lead = leads.find((l) => l.id === leadId);
-    // Sync to Supabase
+    // Sync to MongoDB Atlas
     if (lead) {
-      updatePuppyFranchiseLeadInSupabase(leadId, lead.status, notes);
+      updateFranchiseLeadInMongo(leadId, { status: lead.status, notes });
     }
     onNotify('Internal partner discussion notes saved');
   };

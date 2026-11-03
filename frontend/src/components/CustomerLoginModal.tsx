@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Check, ShieldCheck, ArrowRight, Sparkles, Phone, Lock, KeyRound, Mail } from 'lucide-react';
 import { CustomerUser } from '../types';
 import { saveStoredCustomer } from '../data/sampleOrders';
-import { fetchPuppyCustomerByPhone, fetchPuppyCustomerByEmailOrPhone, upsertPuppyCustomerToSupabase } from '../lib/supabase';
+import { fetchCustomerByPhone, fetchCustomerByEmailOrPhone, upsertCustomerToMongo } from '../lib/mongoApi';
 
 interface CustomerLoginModalProps {
   isOpen: boolean;
@@ -64,8 +64,8 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
     const formattedPhone = `+91 ${cleanNumber}`;
 
     try {
-      // Check if this real customer already exists in Supabase by either email or mobile
-      const existing = await fetchPuppyCustomerByEmailOrPhone(cleanEmail, formattedPhone);
+      // Check if this real customer already exists in MongoDB Atlas by either email or mobile
+      const existing = await fetchCustomerByEmailOrPhone(cleanEmail, formattedPhone);
       setExistingUserFound(existing);
       if (existing?.name) {
         setCustomerName(existing.name);
@@ -103,7 +103,7 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
     const formattedPhone = `+91 ${mobileNumber}`;
     const cleanEmail = emailInput.trim().toLowerCase();
 
-    // If existing customer with a name already exists in Supabase, log in directly
+    // If existing customer with a name already exists in MongoDB Atlas, log in directly
     if (existingUserFound && existingUserFound.name && existingUserFound.name.trim().length > 0) {
       const activeUser: CustomerUser = {
         ...existingUserFound,
@@ -112,7 +112,7 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
         isLoggedIn: true,
         notifyOffers,
       };
-      await upsertPuppyCustomerToSupabase(activeUser).catch(console.warn);
+      await upsertCustomerToMongo(activeUser).catch(console.warn);
       saveStoredCustomer(activeUser);
       setIsLoading(false);
       onLoginSuccess(activeUser);
@@ -155,9 +155,9 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
     };
 
     try {
-      await upsertPuppyCustomerToSupabase(newRealUser);
+      await upsertCustomerToMongo(newRealUser);
     } catch (err) {
-      console.warn('Could not save customer to Supabase:', err);
+      console.warn('Could not save customer to MongoDB:', err);
     }
 
     saveStoredCustomer(newRealUser);

@@ -19,12 +19,12 @@ import {
 } from 'lucide-react';
 import {
   AdminUser,
-  updateAdminCredentialsInSupabase,
-  resetAdminCredentialsInSupabase,
-  fetchAdminUsersFromSupabase,
-  createAdminUserInSupabase,
-  deleteAdminUserInSupabase,
-} from '../../lib/supabase';
+  updateAdminCredentialsInMongo,
+  resetAdminCredentialsInMongo,
+  fetchAdminUsersFromMongo,
+  createAdminUserInMongo,
+  deleteAdminUserInMongo,
+} from '../../lib/mongoApi';
 
 interface AdminCredentialsTabProps {
   currentUsername: string;
@@ -63,7 +63,7 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
 
   const loadAdminUsers = async () => {
     setIsLoadingUsers(true);
-    const users = await fetchAdminUsersFromSupabase();
+    const users = await fetchAdminUsersFromMongo();
     if (users && users.length > 0) {
       setAdminUsers(users);
     }
@@ -114,14 +114,14 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
     try {
       let result;
       if (currentPassword.trim()) {
-        result = await updateAdminCredentialsInSupabase(
+        result = await updateAdminCredentialsInMongo(
           currentUsername,
           currentPassword,
           newUsername,
           newPassword
         );
       } else {
-        result = await resetAdminCredentialsInSupabase(newUsername, newPassword);
+        result = await resetAdminCredentialsInMongo(newUsername, newPassword);
       }
 
       if (result.success) {
@@ -130,7 +130,7 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
         setNewPassword('');
         setConfirmPassword('');
         onCredentialsUpdated(result.username || newUsername);
-        onNotify('Admin credentials securely updated in Supabase cloud!');
+        onNotify('Admin credentials securely updated in MongoDB Atlas!');
         loadAdminUsers();
 
         // Also update local fallback credentials
@@ -160,7 +160,7 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
     }
 
     setIsCreatingUser(true);
-    const res = await createAdminUserInSupabase(
+    const res = await createAdminUserInMongo(
       newUserUsername,
       newUserPassword,
       newUserFullName || 'Store Team Member',
@@ -193,7 +193,7 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
     }
 
     if (admin.id) {
-      const res = await deleteAdminUserInSupabase(admin.id);
+      const res = await deleteAdminUserInMongo(admin.id);
       if (res.success) {
         onNotify(res.message);
         loadAdminUsers();
