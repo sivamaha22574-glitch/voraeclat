@@ -297,6 +297,12 @@ export const updateOrderStatus = async (req, res) => {
     if (awbNumber) updateFields.awbNumber = awbNumber;
     if (courierPartner) updateFields.courierPartner = courierPartner;
     if (courierContact) updateFields.courierContact = courierContact;
+    if (req.body.items && Array.isArray(req.body.items)) updateFields.items = req.body.items;
+    if (req.body.deliveryAddress) updateFields.deliveryAddress = req.body.deliveryAddress;
+    if (req.body.totalAmount !== undefined) updateFields.totalAmount = req.body.totalAmount;
+    if (req.body.subTotal !== undefined) updateFields.subTotal = req.body.subTotal;
+    if (req.body.customerName) updateFields.customerName = req.body.customerName;
+    if (req.body.customerMobile) updateFields.customerMobile = req.body.customerMobile;
 
     // Special status handlers
     if (status === 'Out for Delivery') {
