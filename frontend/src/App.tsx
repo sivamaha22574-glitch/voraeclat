@@ -1058,14 +1058,11 @@ export default function App() {
           onUpdateOrders={(updated) => {
             setCustomerOrders(updated);
             try {
-              localStorage.setItem('puppy_shame_customer_orders', JSON.stringify(updated));
+              localStorage.setItem('voraeclat_customer_orders', JSON.stringify(updated));
+              localStorage.removeItem('puppy_shame_customer_orders');
             } catch {
               // ignore
             }
-            // Sync status changes to MongoDB Atlas
-            updated.forEach((ord) => {
-              updateOrderStatusInMongo(ord.orderId, ord.status);
-            });
           }}
           currentCustomer={customer}
           products={allProducts}

@@ -135,17 +135,27 @@ export const createProduct = async (req, res) => {
       return res.status(201).json({ success: true, count: req.body.length });
     }
 
+    const id = req.body.customId || req.body.id;
     if (isDbConnected) {
-      const product = await Product.create(req.body);
+      const product = await Product.findOneAndUpdate(
+        { $or: [{ customId: id }, ...(id && id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])] },
+        { ...req.body, customId: id },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
       return res.status(201).json({ success: true, data: product });
     }
 
     const newProd = {
       ...req.body,
-      customId: req.body.customId || `ps-${Date.now()}`,
+      customId: req.body.customId || req.body.id || `ps-${Date.now()}`,
       createdAt: new Date().toISOString()
     };
-    inMemoryProducts.push(newProd);
+    const existingIdx = inMemoryProducts.findIndex(p => p.customId === id || p.id === id);
+    if (existingIdx !== -1) {
+      inMemoryProducts[existingIdx] = { ...inMemoryProducts[existingIdx], ...newProd };
+    } else {
+      inMemoryProducts.push(newProd);
+    }
     res.status(201).json({ success: true, data: newProd });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });

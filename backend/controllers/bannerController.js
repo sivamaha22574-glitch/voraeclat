@@ -56,12 +56,22 @@ export const createBanner = async (req, res) => {
       return res.status(201).json({ success: true, count: req.body.length });
     }
 
+    const id = req.body.customId || req.body.id;
     if (isDbConnected) {
-      const banner = await Banner.create(req.body);
+      const banner = await Banner.findOneAndUpdate(
+        { $or: [{ customId: id }, ...(id && id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])] },
+        { ...req.body, customId: id },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
       return res.status(201).json({ success: true, data: banner });
     }
-    const newBanner = { ...req.body, id: `banner-${Date.now()}` };
-    inMemoryBanners.push(newBanner);
+    const newBanner = { ...req.body, customId: id, id: id || `banner-${Date.now()}` };
+    const existingIdx = inMemoryBanners.findIndex(b => b.customId === id || b.id === id);
+    if (existingIdx !== -1) {
+      inMemoryBanners[existingIdx] = { ...inMemoryBanners[existingIdx], ...newBanner };
+    } else {
+      inMemoryBanners.push(newBanner);
+    }
     res.status(201).json({ success: true, data: newBanner });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });

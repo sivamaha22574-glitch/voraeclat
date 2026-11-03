@@ -669,20 +669,21 @@ export async function fetchFranchiseLeadsFromMongo(): Promise<FranchiseLead[] | 
     const json = await apiFetch<any>('/api/leads');
     if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
       return json.data.map((l: any): FranchiseLead => ({
-        id: l.customId || l.id || l._id,
-        name: l.name,
-        email: l.email,
-        phone: l.phone,
-        city: l.city,
-        state: l.state,
-        budget: l.budget,
-        propertyType: l.propertyType,
-        experience: l.experience || '',
+        id: l.leadId || l.id || l._id,
+        fullName: l.fullName || l.name || 'Valued Partner',
+        email: l.email || '',
+        phone: l.phone || '',
+        city: l.city || '',
+        state: l.state || '',
+        currentBusiness: l.currentBusiness || l.experience || '',
+        commercialSpaceStatus: l.commercialSpaceStatus || l.propertyType || '',
+        carpetArea: l.carpetArea || '',
+        investmentBudget: l.investmentBudget || l.budget || '',
+        expectedTimeline: l.expectedTimeline || '',
         message: l.message || '',
-        createdAt: l.createdAt,
-        status: l.status || 'New',
-        assignedTo: l.assignedTo,
-        notes: l.notes,
+        submittedAt: l.createdAt || new Date().toISOString(),
+        status: (l.status || 'New') as any,
+        notes: l.notes || '',
       }));
     }
     return null;
@@ -693,9 +694,25 @@ export async function fetchFranchiseLeadsFromMongo(): Promise<FranchiseLead[] | 
 
 export async function insertFranchiseLeadToMongo(lead: FranchiseLead): Promise<boolean> {
   try {
+    const payload = {
+      leadId: lead.id,
+      fullName: lead.fullName,
+      email: lead.email,
+      phone: lead.phone,
+      city: lead.city,
+      state: lead.state,
+      currentBusiness: lead.currentBusiness,
+      commercialSpaceStatus: lead.commercialSpaceStatus,
+      carpetArea: lead.carpetArea,
+      investmentBudget: lead.investmentBudget,
+      expectedTimeline: lead.expectedTimeline,
+      message: lead.message,
+      status: lead.status || 'New',
+      notes: lead.notes || '',
+    };
     const json = await apiFetch<any>('/api/leads', {
       method: 'POST',
-      body: JSON.stringify(lead),
+      body: JSON.stringify(payload),
     });
     return Boolean(json && (json.success || json.data));
   } catch {
