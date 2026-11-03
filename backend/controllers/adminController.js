@@ -92,8 +92,8 @@ export const verifyAdmin = async (req, res) => {
       });
     }
 
-    // 3. Fallback default check: mayilvanan (Mayil@1718 or Mayil@1101) or admin / admin
-    const isMayilPass = cleanPass === 'Mayil@1718' || cleanPass === 'Mayil@1101';
+    // 3. Fallback default check: mayilvanan (Mayil@4446, Mayil@1718 or Mayil@1101) or admin / admin
+    const isMayilPass = cleanPass === 'Mayil@4446' || cleanPass === 'Mayil@1718' || cleanPass === 'Mayil@1101';
     if (
       (cleanUser === 'mayilvanan' && isMayilPass) ||
       (cleanUser === 'admin' && cleanPass === 'admin')

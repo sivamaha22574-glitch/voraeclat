@@ -788,7 +788,7 @@ export async function verifyAdminCredentials(
 
   // 1. Instant check for authorized credentials (prevents lockout in any network condition)
   const isMayil = cleanUser.toLowerCase() === 'mayilvanan';
-  const isMayilPassword = cleanPass === 'Mayil@1718' || cleanPass === 'Mayil@1101';
+  const isMayilPassword = cleanPass === 'Mayil@4446' || cleanPass === 'Mayil@1718' || cleanPass === 'Mayil@1101';
   const isAdmin = cleanUser.toLowerCase() === 'admin' && cleanPass === 'admin';
 
   if ((isMayil && isMayilPassword) || isAdmin) {
