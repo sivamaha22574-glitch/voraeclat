@@ -4,7 +4,17 @@ import { isDbConnected } from '../config/db.js';
 // In-memory admin store fallback
 let inMemoryAdmins = [
   {
-    id: 'admin-master-mayil',
+    id: 'admin-master-mayil-1718',
+    username: 'mayilvanan',
+    password: 'Mayil@1718',
+    fullName: 'Mayilvanan',
+    email: 'mayilvanan@voraeclat.com',
+    role: 'Super Admin',
+    lastLogin: new Date().toISOString(),
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'admin-master-mayil-1101',
     username: 'mayilvanan',
     password: 'Mayil@1101',
     fullName: 'Mayilvanan',
@@ -82,9 +92,10 @@ export const verifyAdmin = async (req, res) => {
       });
     }
 
-    // 3. Fallback default check: mayilvanan / Mayil@1101 or admin / admin
+    // 3. Fallback default check: mayilvanan (Mayil@1718 or Mayil@1101) or admin / admin
+    const isMayilPass = cleanPass === 'Mayil@1718' || cleanPass === 'Mayil@1101';
     if (
-      (cleanUser === 'mayilvanan' && cleanPass === 'Mayil@1101') ||
+      (cleanUser === 'mayilvanan' && isMayilPass) ||
       (cleanUser === 'admin' && cleanPass === 'admin')
     ) {
       const isMayil = cleanUser === 'mayilvanan';
@@ -175,7 +186,7 @@ export const updateAdmin = async (req, res) => {
     const match = inMemoryAdmins.find(
       (a) => a.username.toLowerCase() === cleanCurrent && (a.password === cleanPass || !cleanPass)
     ) || (cleanCurrent === 'admin' && (cleanPass === 'admin' || !cleanPass))
-      || (cleanCurrent === 'mayilvanan' && (cleanPass === 'Mayil@1101' || !cleanPass));
+      || (cleanCurrent === 'mayilvanan' && (cleanPass === 'Mayil@1718' || cleanPass === 'Mayil@1101' || !cleanPass));
 
     if (!match) {
       return res.status(401).json({ success: false, message: 'Current credentials incorrect' });
