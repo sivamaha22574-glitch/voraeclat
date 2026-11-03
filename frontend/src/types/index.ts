@@ -39,6 +39,19 @@ export interface ProductReview {
   childAge?: string;
 }
 
+export interface ProductStyleHighlights {
+  fabric?: string;
+  length?: string;
+  technique?: string;
+  packageContains?: string;
+  fit?: string;
+  neck?: string;
+  sleeveStyling?: string;
+  sleeveLength?: string;
+  transparency?: string;
+  weaveType?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -66,6 +79,8 @@ export interface Product {
   safetyCertifications: string[];
   imageIllustration: string; // thematic identifier for the high-res SVG product visual
   imageUrl?: string; // high-resolution commercial photography URL
+  galleryImages?: string[]; // 4 gallery images matching the marking area layout
+  styleHighlights?: ProductStyleHighlights; // Style highlights specification on the marking card
   reviews: ProductReview[];
 }
 

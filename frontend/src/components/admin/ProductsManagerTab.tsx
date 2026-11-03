@@ -27,6 +27,8 @@ import {
   TrendingUp,
   FolderTree,
   Upload,
+  Camera,
+  Eye,
 } from 'lucide-react';
 import { Product, CategoryId, AgeGroup, Gender } from '../../types';
 import { PRODUCTS, getStoredProducts, saveStoredProducts } from '../../data/products';
@@ -410,6 +412,32 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
   const [isSubcategoryBatchModalOpen, setIsSubcategoryBatchModalOpen] = useState(false);
   const [batchDraftProducts, setBatchDraftProducts] = useState<Product[]>([]);
 
+  // Marking Area (4-Photo Gallery & Style Highlights) State
+  const [markingAreaProduct, setMarkingAreaProduct] = useState<Product | null>(null);
+  const [markingAreaDraft, setMarkingAreaDraft] = useState<{
+    galleryImages: [string, string, string, string];
+    styleHighlights: {
+      fabric: string;
+      length: string;
+      technique: string;
+      packageContains: string;
+      fit: string;
+      neck: string;
+    };
+  }>({
+    galleryImages: ['', '', '', ''],
+    styleHighlights: {
+      fabric: '',
+      length: '',
+      technique: '',
+      packageContains: '',
+      fit: '',
+      neck: '',
+    },
+  });
+  const [markingActiveTab, setMarkingActiveTab] = useState<'photos' | 'highlights'>('photos');
+  const [activeMarkingSlot, setActiveMarkingSlot] = useState<number>(0);
+
   // Simple New Product Draft State
   const [newProduct, setNewProduct] = useState<Partial<Product>>({
     name: '',
@@ -637,6 +665,83 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
     if (onUpdateProducts) {
       onUpdateProducts(updated);
     }
+  };
+
+  const handleOpenMarkingArea = (p: Product) => {
+    setMarkingAreaProduct(p);
+    const fallbacks = [
+      p.imageUrl || 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=85',
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=85',
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=85',
+      'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=800&q=85',
+    ];
+
+    setMarkingAreaDraft({
+      galleryImages: [
+        p.galleryImages?.[0] || fallbacks[0],
+        p.galleryImages?.[1] || fallbacks[1],
+        p.galleryImages?.[2] || fallbacks[2],
+        p.galleryImages?.[3] || fallbacks[3],
+      ],
+      styleHighlights: {
+        fabric: p.styleHighlights?.fabric || p.fabricOrMaterial || 'Chanderi Silk with 100% Pure Cotton Lining',
+        length: p.styleHighlights?.length || '42" (Calf Length)',
+        technique: p.styleHighlights?.technique || 'Placement Print / Zari Work',
+        packageContains: p.styleHighlights?.packageContains || 'Top & Skirt with Dupatta',
+        fit: p.styleHighlights?.fit || 'Relaxed / Flared fit',
+        neck: p.styleHighlights?.neck || 'Round / Shirt Collar',
+      },
+    });
+    setActiveMarkingSlot(0);
+    setMarkingActiveTab('photos');
+  };
+
+  const handleMarkingImageUpload = (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      onNotify('Please select a valid photo (JPG, PNG, WEBP)');
+      return;
+    }
+    compressAndLoadImage(file, (dataUrl) => {
+      setMarkingAreaDraft((prev) => {
+        const nextImages = [...prev.galleryImages] as [string, string, string, string];
+        nextImages[slotIndex] = dataUrl;
+        return { ...prev, galleryImages: nextImages };
+      });
+      onNotify(`Frame #${slotIndex + 1} photo updated successfully! 📷`);
+    });
+  };
+
+  const handleMarkingImageUrlChange = (slotIndex: number, url: string) => {
+    setMarkingAreaDraft((prev) => {
+      const nextImages = [...prev.galleryImages] as [string, string, string, string];
+      nextImages[slotIndex] = url;
+      return { ...prev, galleryImages: nextImages };
+    });
+  };
+
+  const handleSaveMarkingArea = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!markingAreaProduct) return;
+
+    const updatedProduct: Product = {
+      ...markingAreaProduct,
+      imageUrl: markingAreaDraft.galleryImages[0] || markingAreaProduct.imageUrl,
+      galleryImages: markingAreaDraft.galleryImages,
+      styleHighlights: {
+        ...markingAreaDraft.styleHighlights,
+      },
+      fabricOrMaterial: markingAreaDraft.styleHighlights.fabric || markingAreaProduct.fabricOrMaterial,
+    };
+
+    const updated = productList.map((p) => (p.id === markingAreaProduct.id ? updatedProduct : p));
+    updateCatalog(updated);
+    if (editingProduct && editingProduct.id === markingAreaProduct.id) {
+      setEditingProduct(updatedProduct);
+    }
+    onNotify(`✨ Marking area photos & style highlights saved for "${updatedProduct.name.slice(0, 22)}..."!`);
+    setMarkingAreaProduct(null);
   };
 
   const handleToggleStock = (productId: string) => {
@@ -1294,6 +1399,14 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                     <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1.5">
                         <button
+                          onClick={() => handleOpenMarkingArea(p)}
+                          className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                          title="Edit 4 Gallery Photos & Style Highlights (Product Modal View)"
+                        >
+                          <ImageIcon className="w-3 h-3 text-indigo-600" />
+                          <span>Marking Area (Photos)</span>
+                        </button>
+                        <button
                           onClick={() => setQuickPriceEditProduct({ ...p })}
                           className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
                           title="Directly Change Price & Description"
@@ -1576,6 +1689,34 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* 3b. Marking Area (4 Gallery Photos & Style Highlights) */}
+              <div className="p-3.5 bg-gradient-to-r from-indigo-50/90 to-purple-50/90 border border-indigo-200 rounded-2xl flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                    <Sparkles className="w-4 h-4 text-amber-300" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                      <span>Marking Area (4 Photos & Style Highlights)</span>
+                      <span className="text-[10px] bg-indigo-200/80 text-indigo-900 font-bold px-1.5 py-0.2 rounded shrink-0">
+                        Customer View
+                      </span>
+                    </h4>
+                    <p className="text-[11px] text-slate-500 truncate">
+                      Edit the 4 gallery photos and style highlights card shown on customer modal
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleOpenMarkingArea(editingProduct)}
+                  className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors shrink-0"
+                >
+                  <ImageIcon className="w-3.5 h-3.5 text-indigo-200" />
+                  <span>Open Marking Area Editor</span>
+                </button>
               </div>
 
               {/* 4. Price & MRP */}
@@ -1861,6 +2002,34 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* 3b. Marking Area (4 Gallery Photos & Style Highlights) */}
+              <div className="p-3.5 bg-gradient-to-r from-indigo-50/90 to-purple-50/90 border border-indigo-200 rounded-2xl flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                    <Sparkles className="w-4 h-4 text-amber-300" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                      <span>Marking Area (4 Photos & Style Highlights)</span>
+                      <span className="text-[10px] bg-indigo-200/80 text-indigo-900 font-bold px-1.5 py-0.2 rounded shrink-0">
+                        Customer View
+                      </span>
+                    </h4>
+                    <p className="text-[11px] text-slate-500 truncate">
+                      Edit the 4 gallery photos and style highlights card shown on customer modal
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleOpenMarkingArea(editingProduct)}
+                  className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors shrink-0"
+                >
+                  <ImageIcon className="w-3.5 h-3.5 text-indigo-200" />
+                  <span>Open Marking Area Editor</span>
+                </button>
               </div>
 
               {/* 4. Price & MRP */}
@@ -2399,6 +2568,523 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          MARKING AREA & 4-PHOTO GALLERY EDITOR MODAL
+         ===================================================================== */}
+      {markingAreaProduct && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-6xl w-full p-4 sm:p-6 md:p-7 shadow-2xl border border-slate-200 space-y-4 my-auto max-h-[96vh] overflow-y-auto flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shrink-0">
+                  <Sparkles className="w-5 h-5 text-amber-300" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base sm:text-lg font-black text-slate-900">
+                      Product Marking Area &amp; Photo Gallery Editor
+                    </h3>
+                    <span className="text-[10px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                      Storefront Modal View
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
+                    <strong>{markingAreaProduct.name}</strong> &bull; {markingAreaProduct.categoryName} &bull; ₹{markingAreaProduct.price}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMarkingAreaProduct(null)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center cursor-pointer transition-colors"
+                title="Close Editor"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body: 2-Column Split (Live Marking Area Preview on Left, Photo & Highlight Controls on Right) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 overflow-y-auto">
+              {/* Left Column (5 Cols / 42%): Real-Time Visual 2x2 Marking Area Preview */}
+              <div className="lg:col-span-5 bg-slate-900 rounded-2xl p-3.5 sm:p-4 text-white flex flex-col justify-between space-y-3 border border-slate-800 shadow-inner">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Live 1:1 Customer View Preview</span>
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">4-Frame Grid</span>
+                  </div>
+
+                  {/* 2x2 Marking Area Grid */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Frame 1: Top-Left (Main Front Shot) */}
+                    <div
+                      onClick={() => {
+                        setActiveMarkingSlot(0);
+                        setMarkingActiveTab('photos');
+                      }}
+                      className={`relative rounded-xl overflow-hidden aspect-[3/4] bg-slate-800 border cursor-pointer transition-all group ${
+                        activeMarkingSlot === 0 ? 'ring-2 ring-amber-400 border-amber-400' : 'border-slate-700/80 hover:border-amber-400/60'
+                      }`}
+                    >
+                      <img
+                        src={markingAreaDraft.galleryImages[0]}
+                        alt="Frame 1 Main Front"
+                        className="w-full h-full object-cover object-top"
+                      />
+                      <div className="absolute top-1.5 left-1.5 bg-black/75 backdrop-blur-xs text-[9px] font-black text-white px-1.5 py-0.5 rounded">
+                        #1 Front Photo
+                      </div>
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-[10px] font-black bg-amber-400 text-slate-950 px-2 py-1 rounded-lg flex items-center gap-1 shadow-md">
+                          <Camera className="w-3 h-3" /> Change
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Frame 2: Top-Right (Dark Infographic "Style Highlights" Card) */}
+                    <div
+                      onClick={() => {
+                        setActiveMarkingSlot(1);
+                      }}
+                      className={`relative rounded-xl overflow-hidden aspect-[3/4] bg-[#1a2332] text-white p-2.5 sm:p-3 flex flex-col justify-between border cursor-pointer transition-all group ${
+                        activeMarkingSlot === 1 ? 'ring-2 ring-amber-400 border-amber-400' : 'border-slate-700/80 hover:border-amber-400/60'
+                      }`}
+                    >
+                      {/* Background silhouette on right */}
+                      <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-35 pointer-events-none overflow-hidden">
+                        <img
+                          src={markingAreaDraft.galleryImages[1]}
+                          alt="Silhouette"
+                          className="w-full h-full object-cover object-top"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#1a2332] via-[#1a2332]/60 to-transparent" />
+                      </div>
+
+                      <div className="relative z-10 space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-[11px] sm:text-xs font-bold text-white tracking-tight flex items-center gap-1">
+                            <span>Style Highlights</span>
+                          </h4>
+                          <span className="text-[8px] bg-black/60 text-amber-300 px-1 py-0.2 rounded font-mono">
+                            #2 Card
+                          </span>
+                        </div>
+
+                        <div className="space-y-1 text-[9px] leading-tight">
+                          <div>
+                            <div className="text-[8px] text-slate-400 uppercase tracking-wider">Fabric</div>
+                            <div className="font-semibold text-white line-clamp-1">{markingAreaDraft.styleHighlights.fabric || 'Pure Cotton Viscose'}</div>
+                          </div>
+                          <div>
+                            <div className="text-[8px] text-slate-400 uppercase tracking-wider">Length</div>
+                            <div className="font-semibold text-white line-clamp-1">{markingAreaDraft.styleHighlights.length || '42" (Calf Length)'}</div>
+                          </div>
+                          <div>
+                            <div className="text-[8px] text-slate-400 uppercase tracking-wider">Technique</div>
+                            <div className="font-semibold text-white line-clamp-1">{markingAreaDraft.styleHighlights.technique || 'Placement Print'}</div>
+                          </div>
+                          <div>
+                            <div className="text-[8px] text-slate-400 uppercase tracking-wider">Package Contains</div>
+                            <div className="font-semibold text-white line-clamp-1">{markingAreaDraft.styleHighlights.packageContains || 'Top only'}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="relative z-10 pt-1 border-t border-slate-700/60 flex items-center justify-between text-[8px] text-amber-300 font-medium">
+                        <span className="flex items-center gap-0.5">
+                          <Sparkles className="w-2.5 h-2.5" /> Certified Craft
+                        </span>
+                        <span className="text-slate-400">Premium Fit</span>
+                      </div>
+                    </div>
+
+                    {/* Frame 3: Bottom-Left (Close-up Detail Shot) */}
+                    <div
+                      onClick={() => {
+                        setActiveMarkingSlot(2);
+                        setMarkingActiveTab('photos');
+                      }}
+                      className={`relative rounded-xl overflow-hidden aspect-[3/4] bg-slate-800 border cursor-pointer transition-all group ${
+                        activeMarkingSlot === 2 ? 'ring-2 ring-amber-400 border-amber-400' : 'border-slate-700/80 hover:border-amber-400/60'
+                      }`}
+                    >
+                      <img
+                        src={markingAreaDraft.galleryImages[2]}
+                        alt="Frame 3 Detail"
+                        className="w-full h-full object-cover object-top"
+                      />
+                      <div className="absolute top-1.5 left-1.5 bg-black/75 backdrop-blur-xs text-[9px] font-black text-white px-1.5 py-0.5 rounded">
+                        #3 Close-up
+                      </div>
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-[10px] font-black bg-amber-400 text-slate-950 px-2 py-1 rounded-lg flex items-center gap-1 shadow-md">
+                          <Camera className="w-3 h-3" /> Change
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Frame 4: Bottom-Right (Ambience / Angle Shot) */}
+                    <div
+                      onClick={() => {
+                        setActiveMarkingSlot(3);
+                        setMarkingActiveTab('photos');
+                      }}
+                      className={`relative rounded-xl overflow-hidden aspect-[3/4] bg-slate-800 border cursor-pointer transition-all group ${
+                        activeMarkingSlot === 3 ? 'ring-2 ring-amber-400 border-amber-400' : 'border-slate-700/80 hover:border-amber-400/60'
+                      }`}
+                    >
+                      <img
+                        src={markingAreaDraft.galleryImages[3]}
+                        alt="Frame 4 Ambience"
+                        className="w-full h-full object-cover object-center"
+                      />
+                      <div className="absolute top-1.5 left-1.5 bg-black/75 backdrop-blur-xs text-[9px] font-black text-white px-1.5 py-0.5 rounded">
+                        #4 Ambience
+                      </div>
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-[10px] font-black bg-amber-400 text-slate-950 px-2 py-1 rounded-lg flex items-center gap-1 shadow-md">
+                          <Camera className="w-3 h-3" /> Change
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700/60 text-[10px] text-slate-300 leading-relaxed">
+                  💡 <strong>Tip:</strong> Click any frame on this preview to immediately switch and edit its photo or text.
+                </div>
+              </div>
+
+              {/* Right Column (7 Cols / 58%): Controls for Photo Change & Style Highlights */}
+              <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
+                {/* Navigation Tabs */}
+                <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                  <button
+                    type="button"
+                    onClick={() => setMarkingActiveTab('photos')}
+                    className={`px-3.5 py-1.5 rounded-xl font-black text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                      markingActiveTab === 'photos'
+                        ? 'bg-amber-400 text-slate-950 shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Change 4 Photos</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMarkingActiveTab('highlights')}
+                    className={`px-3.5 py-1.5 rounded-xl font-black text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                      markingActiveTab === 'highlights'
+                        ? 'bg-amber-400 text-slate-950 shadow-xs'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    <span>Edit Style Highlights Text</span>
+                  </button>
+                </div>
+
+                {/* Tab 1: Photo Change Options */}
+                {markingActiveTab === 'photos' && (
+                  <div className="space-y-3.5 max-h-[56vh] overflow-y-auto pr-1">
+                    {[
+                      {
+                        slot: 0,
+                        title: 'Frame 1: Main Front Photo',
+                        desc: 'Full-length commercial front photograph of the model or product',
+                        tag: 'Primary Image',
+                      },
+                      {
+                        slot: 1,
+                        title: 'Frame 2: Silhouette & Style Card Background',
+                        desc: 'Artistic side profile or silhouette blended into the Style Highlights infographic',
+                        tag: 'Card Background',
+                      },
+                      {
+                        slot: 2,
+                        title: 'Frame 3: Close-up Portrait / Fabric Detail',
+                        desc: 'Macro shot of embroidery, print, neckline, or fabric texture',
+                        tag: 'Detail Shot',
+                      },
+                      {
+                        slot: 3,
+                        title: 'Frame 4: Ambience & Angle Shot',
+                        desc: 'Lifestyle environment, twirling angle, or architectural backdrop',
+                        tag: 'Ambience Shot',
+                      },
+                    ].map((item) => {
+                      const isSelected = activeMarkingSlot === item.slot;
+                      const currentUrl = markingAreaDraft.galleryImages[item.slot];
+
+                      return (
+                        <div
+                          key={item.slot}
+                          onClick={() => setActiveMarkingSlot(item.slot)}
+                          className={`p-3.5 rounded-2xl border transition-all ${
+                            isSelected
+                              ? 'bg-amber-50/60 border-amber-400 ring-2 ring-amber-400/20'
+                              : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-slate-900 text-white font-bold text-[10px] flex items-center justify-center">
+                                {item.slot + 1}
+                              </span>
+                              <h5 className="font-extrabold text-xs text-slate-900">{item.title}</h5>
+                            </div>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-200/80 text-slate-700">
+                              {item.tag}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <div className="w-16 h-20 rounded-xl bg-slate-200 overflow-hidden shrink-0 border border-slate-300 relative group">
+                              <img
+                                src={currentUrl}
+                                alt={item.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+
+                            <div className="flex-1 space-y-2 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <label className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors shrink-0">
+                                  <Upload className="w-3.5 h-3.5" />
+                                  <span>Upload New Photo</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => handleMarkingImageUpload(item.slot, e)}
+                                  />
+                                </label>
+                                <span className="text-xs text-slate-400 font-medium">or paste URL:</span>
+                              </div>
+
+                              <input
+                                type="url"
+                                value={currentUrl}
+                                onChange={(e) => handleMarkingImageUrlChange(item.slot, e.target.value)}
+                                placeholder="https://images.unsplash.com/..."
+                                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:outline-hidden focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Tab 2: Style Highlights Text Editor */}
+                {markingActiveTab === 'highlights' && (
+                  <div className="space-y-3.5 max-h-[56vh] overflow-y-auto pr-1 text-xs">
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-[11px] text-amber-900 leading-relaxed flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span>
+                        These details appear directly on <strong>Card #2 (Top-Right Infographic)</strong> and inside the Specifications section of the product modal.
+                      </span>
+                    </div>
+
+                    {/* Fabric */}
+                    <div className="space-y-1">
+                      <label className="font-extrabold text-slate-900">
+                        Top Fabric &amp; Lining <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={markingAreaDraft.styleHighlights.fabric}
+                        onChange={(e) =>
+                          setMarkingAreaDraft({
+                            ...markingAreaDraft,
+                            styleHighlights: { ...markingAreaDraft.styleHighlights, fabric: e.target.value },
+                          })
+                        }
+                        placeholder="e.g. Chanderi Silk with 100% Pure Cotton Lining"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-hidden focus:border-amber-400"
+                      />
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {[
+                          'Chanderi Silk with 100% Cotton Lining',
+                          '100% Organic Stretch Cotton',
+                          'Pure Georgette with Voile Lining',
+                          'Viscose Silk Blend',
+                          'Super-Soft Terry Cotton',
+                        ].map((chip) => (
+                          <button
+                            key={chip}
+                            type="button"
+                            onClick={() =>
+                              setMarkingAreaDraft({
+                                ...markingAreaDraft,
+                                styleHighlights: { ...markingAreaDraft.styleHighlights, fabric: chip },
+                              })
+                            }
+                            className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-amber-100 text-[10px] text-slate-700 font-medium transition-colors cursor-pointer"
+                          >
+                            + {chip}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Length */}
+                    <div className="space-y-1">
+                      <label className="font-extrabold text-slate-900">
+                        Length Specification <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={markingAreaDraft.styleHighlights.length}
+                        onChange={(e) =>
+                          setMarkingAreaDraft({
+                            ...markingAreaDraft,
+                            styleHighlights: { ...markingAreaDraft.styleHighlights, length: e.target.value },
+                          })
+                        }
+                        placeholder='e.g. 42" (Calf Length)'
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-hidden focus:border-amber-400"
+                      />
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {['42" (Calf Length)', '46" (Calf Length)', 'Full Length (Ankle)', 'Knee Length', 'Standard Regular Fit'].map((chip) => (
+                          <button
+                            key={chip}
+                            type="button"
+                            onClick={() =>
+                              setMarkingAreaDraft({
+                                ...markingAreaDraft,
+                                styleHighlights: { ...markingAreaDraft.styleHighlights, length: chip },
+                              })
+                            }
+                            className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-amber-100 text-[10px] text-slate-700 font-medium transition-colors cursor-pointer"
+                          >
+                            + {chip}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Technique */}
+                    <div className="space-y-1">
+                      <label className="font-extrabold text-slate-900">
+                        Technique / Embroidery / Craft <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={markingAreaDraft.styleHighlights.technique}
+                        onChange={(e) =>
+                          setMarkingAreaDraft({
+                            ...markingAreaDraft,
+                            styleHighlights: { ...markingAreaDraft.styleHighlights, technique: e.target.value },
+                          })
+                        }
+                        placeholder="e.g. Zari &amp; Resham Hand Embroidery"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-hidden focus:border-amber-400"
+                      />
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {[
+                          'Zari & Resham Embroidery',
+                          'Placement Print',
+                          'Handcrafted Mirror Work',
+                          'Digital Floral Print',
+                          'Sequins & Gota Patti Lace',
+                        ].map((chip) => (
+                          <button
+                            key={chip}
+                            type="button"
+                            onClick={() =>
+                              setMarkingAreaDraft({
+                                ...markingAreaDraft,
+                                styleHighlights: { ...markingAreaDraft.styleHighlights, technique: chip },
+                              })
+                            }
+                            className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-amber-100 text-[10px] text-slate-700 font-medium transition-colors cursor-pointer"
+                          >
+                            + {chip}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Package Contains & Fit */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="font-extrabold text-slate-900">Package Contains</label>
+                        <input
+                          type="text"
+                          value={markingAreaDraft.styleHighlights.packageContains}
+                          onChange={(e) =>
+                            setMarkingAreaDraft({
+                              ...markingAreaDraft,
+                              styleHighlights: { ...markingAreaDraft.styleHighlights, packageContains: e.target.value },
+                            })
+                          }
+                          placeholder="e.g. Top &amp; Skirt with Dupatta"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-hidden focus:border-amber-400"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-extrabold text-slate-900">Fit / Silhouette</label>
+                        <input
+                          type="text"
+                          value={markingAreaDraft.styleHighlights.fit}
+                          onChange={(e) =>
+                            setMarkingAreaDraft({
+                              ...markingAreaDraft,
+                              styleHighlights: { ...markingAreaDraft.styleHighlights, fit: e.target.value },
+                            })
+                          }
+                          placeholder="e.g. Flared / Relaxed Fit"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-hidden focus:border-amber-400"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Bottom Footer Actions */}
+                <div className="flex items-center justify-between pt-3 border-t border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (markingAreaProduct) handleOpenMarkingArea(markingAreaProduct);
+                      onNotify('Reverted to product defaults.');
+                    }}
+                    className="px-3 py-2 rounded-xl text-slate-500 hover:bg-slate-100 font-bold text-xs cursor-pointer transition-colors"
+                  >
+                    Reset Changes
+                  </button>
+
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setMarkingAreaProduct(null)}
+                      className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSaveMarkingArea()}
+                      className="px-6 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs shadow-md cursor-pointer transition-all flex items-center gap-1.5"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Save Marking Area &amp; Photos</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

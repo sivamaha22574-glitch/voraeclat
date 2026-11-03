@@ -42,6 +42,8 @@ const productSchema = new mongoose.Schema({
   safetyCertifications: [{ type: String }],
   imageIllustration: { type: String, default: 'casual-apparel' },
   imageUrl: { type: String, default: '' },
+  galleryImages: [{ type: String }],
+  styleHighlights: { type: mongoose.Schema.Types.Mixed },
   reviews: [reviewSchema]
 }, {
   timestamps: true

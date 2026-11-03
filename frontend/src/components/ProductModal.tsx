@@ -56,31 +56,36 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     product.name.toLowerCase().includes('sunflower') ||
     product.name.toLowerCase().includes('sapphire');
 
-  // Curated 4-frame gallery matching the reference image layout (4 frames only)
-  const galleryImages = [
-    // 1. Top-left: Main front full shot
+  // Curated 4-frame gallery matching the reference image layout (marking area)
+  // Seamlessly prioritizes admin-customized gallery photos with fallback to defaults
+  const defaultFallbacks = [
     product.imageUrl ||
       'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=85',
-    // 2. Top-right: Infographic / model side background
     'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=85',
-    // 3. Bottom-left: Close-up portrait of collar and print
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=85',
-    // 4. Bottom-right: Full environmental architectural arch shot
     'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=800&q=85',
   ];
 
-  // Specific Key Highlights extracted dynamically or from Sunflower Sapphire model
+  const galleryImages = [
+    product.galleryImages?.[0] || defaultFallbacks[0],
+    product.galleryImages?.[1] || defaultFallbacks[1],
+    product.galleryImages?.[2] || defaultFallbacks[2],
+    product.galleryImages?.[3] || defaultFallbacks[3],
+  ];
+
+  // Specific Key Highlights extracted dynamically from admin customizations or defaults
+  const customHighlights = product.styleHighlights || {};
   const keyHighlights = {
-    fit: isSunflowerDress ? 'A-line fit' : 'Relaxed / Flared fit',
-    topFabric: isSunflowerDress ? 'Viscose' : product.fabricOrMaterial || 'Pure Cotton Viscose',
-    neck: isSunflowerDress ? 'Shirt Collar' : 'Band / Round Neck',
-    sleeveStyling: '3/4th',
-    sleeveLength: '16 Inches',
-    topTechnique: isSunflowerDress ? 'Print' : 'Placement Print',
-    length: '46" (Calf Length)',
-    packageContains: 'Top only',
-    transparency: 'Opaque',
-    weaveType: 'Machine Weave',
+    fit: customHighlights.fit || (isSunflowerDress ? 'A-line fit' : 'Relaxed / Flared fit'),
+    topFabric: customHighlights.fabric || (isSunflowerDress ? 'Viscose' : product.fabricOrMaterial || 'Pure Cotton Viscose'),
+    neck: customHighlights.neck || (isSunflowerDress ? 'Shirt Collar' : 'Band / Round Neck'),
+    sleeveStyling: customHighlights.sleeveStyling || '3/4th',
+    sleeveLength: customHighlights.sleeveLength || '16 Inches',
+    topTechnique: customHighlights.technique || (isSunflowerDress ? 'Print' : 'Placement Print'),
+    length: customHighlights.length || '46" (Calf Length)',
+    packageContains: customHighlights.packageContains || 'Top only',
+    transparency: customHighlights.transparency || 'Opaque',
+    weaveType: customHighlights.weaveType || 'Machine Weave',
   };
 
   const handleAddToCartClick = () => {
