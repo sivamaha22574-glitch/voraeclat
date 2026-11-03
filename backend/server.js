@@ -106,10 +106,10 @@ const startServer = (port, retries = 5) => {
   server.on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
       if (retries > 0) {
-        console.warn(`[Notice]: Port ${port} is releasing. Retrying in 1s (${retries} attempts left)...`);
+        console.warn(`[Notice]: Port ${port} is occupied. Retrying in 1s (${retries} attempts left)...`);
         setTimeout(() => startServer(port, retries - 1), 1000);
       } else {
-        console.error(`[Notice]: Port ${port} was already in use. Please restart your terminal.`);
+        console.error(`[Notice]: Port ${port} is in use by another process. Please free port ${port} or choose another port.`);
         process.exit(1);
       }
     } else {
