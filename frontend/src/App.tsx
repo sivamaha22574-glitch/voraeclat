@@ -282,8 +282,9 @@ export default function App() {
       }
     });
 
-    // 2. Fetch live customer orders from MongoDB Atlas
+    // 2. Fetch live customer orders from MongoDB Atlas and automatically backfill any local orders
     fetchOrdersFromMongo().then((remoteOrders) => {
+      const localOrders = getStoredOrders();
       if (remoteOrders && remoteOrders.length > 0) {
         setCustomerOrders(remoteOrders);
         try {
@@ -292,6 +293,18 @@ export default function App() {
         } catch {
           // ignore
         }
+        // Auto-sync any local orders that might not be in MongoDB Atlas
+        const remoteIds = new Set(remoteOrders.map((o) => o.orderId));
+        localOrders.forEach((lo) => {
+          if (!remoteIds.has(lo.orderId)) {
+            insertOrderToMongo(lo).catch(console.warn);
+          }
+        });
+      } else if (localOrders.length > 0) {
+        // Push all local orders to MongoDB Atlas automatically
+        localOrders.forEach((lo) => {
+          insertOrderToMongo(lo).catch(console.warn);
+        });
       }
     });
 

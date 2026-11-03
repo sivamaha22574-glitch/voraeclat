@@ -616,7 +616,9 @@ export async function insertOrderToMongo(order: CustomerOrder): Promise<boolean>
       paymentMode: order.paymentMode || order.paymentMethod || 'COD',
       paymentMethod: order.paymentMethod || 'Cash on Delivery (COD)',
       courierPartner: order.courierPartner || 'Delhivery',
-      trackingNumber: order.trackingNumber,
+      awbNumber: order.awbNumber || order.trackingNumber || `DELHIVERY-${order.orderId}IN`,
+      trackingNumber: order.trackingNumber || `DELHIVERY-${order.orderId}IN`,
+      expectedDelivery: order.expectedDelivery || 'Expected delivery in 2-3 days',
       status: order.status || 'Confirmed',
     };
 

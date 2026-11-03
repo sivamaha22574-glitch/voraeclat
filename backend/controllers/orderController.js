@@ -49,30 +49,26 @@ export const createOrder = async (req, res) => {
 
     const orderId = req.body.orderId || `ORD-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
 
-    // Check if order already exists (idempotent creation)
     const existing = await Order.findOne({ orderId });
-    if (existing) {
-      return res.status(200).json({ success: true, data: existing, message: 'Order already recorded in MongoDB' });
-    }
 
-    const invoiceNumber = `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    const finalMobile = customerMobile || req.body.customerPhone || (deliveryAddress && deliveryAddress.phone) || '+91 9999999999';
-    const finalName = customerName || (deliveryAddress && deliveryAddress.name) || 'Customer';
-    const finalEmail = customerEmail || req.body.customerEmail || (deliveryAddress && deliveryAddress.email) || '';
+    const invoiceNumber = existing?.invoiceNumber || req.body.invoiceNumber || `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const finalMobile = customerMobile || req.body.customerPhone || (deliveryAddress && deliveryAddress.phone) || existing?.customerMobile || '+91 9999999999';
+    const finalName = customerName || (deliveryAddress && deliveryAddress.name) || existing?.customerName || 'Customer';
+    const finalEmail = customerEmail || req.body.customerEmail || (deliveryAddress && deliveryAddress.email) || existing?.customerEmail || '';
 
-    const finalDeliveryAddress = deliveryAddress || {
+    const finalDeliveryAddress = deliveryAddress || existing?.deliveryAddress || {
       name: finalName,
       phone: finalMobile,
       address: req.body.customerAddress || 'Address not provided',
       city: req.body.customerCity || 'Mumbai',
       pincode: req.body.customerPincode || '400001'
     };
-    const finalTracking = trackingNumber || `DLV-${Math.floor(100000000 + Math.random() * 900000000)}`;
-    const finalAwb = awbNumber || `AWB-${Math.floor(10000000 + Math.random() * 90000000)}`;
+    const finalTracking = trackingNumber || req.body.tracking || existing?.trackingNumber || `DELHIVERY-${orderId}IN`;
+    const finalAwb = awbNumber || req.body.awb || existing?.awbNumber || `DELHIVERY-${orderId}IN`;
 
     const deliveryDate = new Date();
     deliveryDate.setDate(deliveryDate.getDate() + 3);
-    const expectedDelivery = deliveryDate.toLocaleDateString('en-IN', {
+    const expectedDelivery = req.body.expectedDelivery || existing?.expectedDelivery || deliveryDate.toLocaleDateString('en-IN', {
       day: 'numeric',
       month: 'short',
       year: 'numeric'
@@ -82,16 +78,16 @@ export const createOrder = async (req, res) => {
       productId: it.productId || it.id || 'PRD-DEFAULT',
       productName: it.productName || it.name || 'Voraeclat Product',
       imageUrl: it.imageUrl || '/voraeclat-mark.png',
-      price: Number(it.price) || 499,
+      price: Number(it.price) || 449,
       quantity: Number(it.quantity) || 1,
       size: it.size || 'Standard',
       color: it.color || 'Standard',
       originalPrice: it.originalPrice || it.price
     }));
 
-    const computedSubTotal = subTotal || normalizedItems.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0);
-    const computedTotal = totalAmount || (computedSubTotal - discountAmount + gstAmount + shippingFee + codFee);
-    let rawPaymentMode = paymentMode || paymentMethod || 'COD';
+    const computedSubTotal = Number(subTotal) || (normalizedItems.length > 0 ? normalizedItems.reduce((acc, it) => acc + (it.price * (it.quantity || 1)), 0) : existing?.subTotal || 449);
+    const computedTotal = Number(totalAmount) || (computedSubTotal - discountAmount + gstAmount + shippingFee + codFee) || existing?.totalAmount || 498;
+    let rawPaymentMode = paymentMode || paymentMethod || existing?.paymentMode || 'COD';
     let chosenPaymentMode = 'COD';
     if (rawPaymentMode.toUpperCase().includes('COD') || rawPaymentMode.toUpperCase().includes('CASH')) {
       chosenPaymentMode = 'COD';
@@ -107,10 +103,10 @@ export const createOrder = async (req, res) => {
 
     const isPrepaid = chosenPaymentMode !== 'COD';
 
-    const order = await Order.create({
+    const orderPayload = {
       orderId,
       invoiceNumber,
-      invoiceDate: new Date(),
+      invoiceDate: existing?.invoiceDate || new Date(),
       user: req.user ? req.user._id : undefined,
       customerMobile: finalMobile,
       customerName: finalName,
@@ -118,7 +114,7 @@ export const createOrder = async (req, res) => {
       customerAlternateMobile,
       deliveryAddress: finalDeliveryAddress,
       billingAddress: billingAddress || finalDeliveryAddress,
-      items: normalizedItems,
+      items: normalizedItems.length > 0 ? normalizedItems : (existing?.items || []),
       subTotal: computedSubTotal,
       discountAmount,
       couponApplied,
@@ -132,18 +128,18 @@ export const createOrder = async (req, res) => {
       // Payment details
       paymentMode: chosenPaymentMode,
       paymentMethod: chosenPaymentMode,
-      paymentStatus: paymentStatus || (isPrepaid ? 'Paid' : 'COD Pending Collection'),
+      paymentStatus: paymentStatus || existing?.paymentStatus || (isPrepaid ? 'Paid' : 'COD Pending Collection'),
       codAmountToCollect: isPrepaid ? 0 : computedTotal,
       codCollectionStatus: isPrepaid ? 'Not Applicable' : 'Pending Collection',
-      transactionId: transactionId || (isPrepaid ? `TXN-${Date.now()}` : undefined),
+      transactionId: transactionId || existing?.transactionId || (isPrepaid ? `TXN-${Date.now()}` : undefined),
       isPaid: isPrepaid,
-      paidAt: isPrepaid ? new Date() : undefined,
+      paidAt: isPrepaid ? (existing?.paidAt || new Date()) : undefined,
       // Courier & Logistics
-      courierPartner,
+      courierPartner: courierPartner || existing?.courierPartner || 'Delhivery',
       awbNumber: finalAwb,
       trackingNumber: finalTracking,
       trackingUrl: `https://www.delhivery.com/track/package/${finalAwb}`,
-      status: 'Confirmed',
+      status: req.body.status || existing?.status || 'Confirmed',
       expectedDelivery,
       // Ad Attribution
       adCampaignId: adCampaignId || 'CAMP-DEFAULT',
@@ -155,7 +151,14 @@ export const createOrder = async (req, res) => {
       utmContent,
       utmTerm,
       customerNotes
-    });
+    };
+
+    // Upsert directly to MongoDB Atlas
+    const order = await Order.findOneAndUpdate(
+      { orderId },
+      { $set: orderPayload },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
     // Update customer spend stats if user exists
     if (customerMobile) {
