@@ -117,6 +117,7 @@ const orderSchema = new mongoose.Schema({
       'Confirmed',
       'Packed',
       'Dispatched',
+      'Shipped',
       'In Transit',
       'Out for Delivery',
       'Delivery Pending',
@@ -125,6 +126,10 @@ const orderSchema = new mongoose.Schema({
       'Returned',
       'RTO'
     ],
+    default: 'Confirmed'
+  },
+  orderStatus: {
+    type: String,
     default: 'Confirmed'
   },
 

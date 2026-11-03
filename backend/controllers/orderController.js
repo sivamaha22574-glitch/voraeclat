@@ -288,7 +288,11 @@ export const updateOrderStatus = async (req, res) => {
     } = req.body;
 
     const updateFields = {};
-    if (status) updateFields.status = status;
+    const targetStatus = status || req.body.orderStatus;
+    if (targetStatus) {
+      updateFields.status = targetStatus;
+      updateFields.orderStatus = targetStatus;
+    }
     if (trackingNumber) updateFields.trackingNumber = trackingNumber;
     if (awbNumber) updateFields.awbNumber = awbNumber;
     if (courierPartner) updateFields.courierPartner = courierPartner;
