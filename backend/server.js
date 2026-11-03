@@ -37,6 +37,14 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// Disable caching so latest frontend and database updates appear immediately
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
+
 // -------------------------------------------------------------
 // 1. API ROUTES (MERN MVC Architecture)
 // -------------------------------------------------------------
