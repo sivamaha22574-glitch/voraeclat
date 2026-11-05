@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------
+  # Backend API Service (Node.js / Express / MERN MVC)
+  # -------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: voraeclat-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGODB_URI=mongodb+srv://mayil:Mayil4446@cluster0.yz0ig7h.mongodb.net/voraeclat?retryWrites=true&w=majority&appName=Cluster0
+      - MONGO_URI=mongodb+srv://mayil:Mayil4446@cluster0.yz0ig7h.mongodb.net/voraeclat?retryWrites=true&w=majority&appName=Cluster0
+      - JWT_SECRET=voraeclat_super_secure_jwt_secret_key_2026
+      - CLIENT_URL=http://localhost
+    networks:
+      - voraeclat-network
+
+  # -------------------------------------------------------------
+  # Frontend Client Service (React / Vite compiled, served by Nginx)
+  # -------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: voraeclat-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - voraeclat-network
+
+networks:
+  voraeclat-network:
+    driver: bridge
