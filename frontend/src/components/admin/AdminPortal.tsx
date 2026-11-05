@@ -683,39 +683,36 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
               <span>Admin Portal</span>
             </div>
-            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold tracking-wide" title="Connected to Express & MongoDB MERN Backend on Port 5000">
-              {/* Diagnostic Indicator: Hidden (change className to 'hidden md:flex' to show) */}
-              <div className="hidden items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold tracking-wide" title="Connected to Express & MongoDB MERN Backend on Port 5000">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>MERN Stack (Port 5000)</span>
-              </div>
+            {/* Diagnostic Indicator: Hidden (change className to 'hidden md:flex' to show) */}
+            <div className="hidden items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold tracking-wide" title="Connected to Express & MongoDB MERN Backend on Port 5000">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>MERN Stack (Port 5000)</span>
             </div>
+          </div>
 
-            {/* Quick Actions & Profile */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* View Live Store Button */}
-              <button
-                onClick={onBackToStore}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
-                title="Return to Customer Storefront"
-              >
-                <Store className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Back to Online Store</span>
-                <span className="sm:hidden">Store</span>
-              </button>
+          {/* Quick Actions & Profile */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* View Live Store Button */}
+            <button
+              onClick={onBackToStore}
+              className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+              title="Return to Customer Storefront"
+            >
+              <Store className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Back to Online Store</span>
+              <span className="sm:hidden">Store</span>
+            </button>
 
-              {/* Backend MVC Admin Direct Link */}
-              {/* Backend MVC Admin Direct Link: Hidden (change className to 'hidden lg:flex' to show) */}
-              <a
-                href="http://localhost:5000/admin"
-                target="_blank"
-                rel="noreferrer"
-                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs transition-all shadow-xs"
-                className="hidden items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs transition-all shadow-xs"
-                title="Open Backend MVC Admin Console on Port 5000"
-              >
-                <span>⚡ Backend MVC Admin (5000)</span>
-              </a>
+            {/* Backend MVC Admin Direct Link: Hidden (change className to 'hidden lg:flex' to show) */}
+            <a
+              href="http://localhost:5000/admin"
+              target="_blank"
+              rel="noreferrer"
+              className="hidden items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs transition-all shadow-xs"
+              title="Open Backend MVC Admin Console on Port 5000"
+            >
+              <span>⚡ Backend MVC Admin (5000)</span>
+            </a>
 
               {/* Admin Profile & Credentials Trigger */}
               <button
