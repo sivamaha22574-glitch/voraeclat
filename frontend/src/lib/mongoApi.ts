@@ -937,9 +937,9 @@ export async function updateAdminCredentialsInMongo(
 export async function fetchAdminUsersFromMongo(): Promise<AdminUser[] | null> {
   try {
     const json = await apiFetch<any>('/api/admin/users');
-    if (json && json.success && Array.isArray(json.data)) {
+    if (json && json.success && Array.isArray(json.data) && json.data.length > 0) {
       return json.data.map((u: any): AdminUser => ({
-        id: u.id || u._id,
+        id: u.id || u._id || u.username,
         username: u.username,
         fullName: u.fullName || u.username,
         email: u.email || `${u.username}@voraeclat.com`,
@@ -953,12 +953,14 @@ export async function fetchAdminUsersFromMongo(): Promise<AdminUser[] | null> {
 
   return [
     {
+      id: 'admin-mayilvanan',
       username: 'mayilvanan',
       fullName: 'Mayilvanan',
       email: 'mayilvanan@voraeclat.com',
       role: 'Super Admin',
     },
     {
+      id: 'admin-root',
       username: 'admin',
       fullName: 'Chief Executive Administrator',
       email: 'admin@voraeclat.com',
@@ -988,14 +990,15 @@ export async function createAdminUserInMongo(
   }
 }
 
-export async function deleteAdminUserInMongo(adminId: string): Promise<{ success: boolean; message: string }> {
+export async function deleteAdminUserInMongo(adminIdOrUsername: string): Promise<{ success: boolean; message: string }> {
   try {
-    const json = await apiFetch<any>(`/api/admin/users/${adminId}`, {
+    const target = encodeURIComponent(String(adminIdOrUsername).trim());
+    const json = await apiFetch<any>(`/api/admin/users/${target}`, {
       method: 'DELETE',
     });
     return {
       success: Boolean(json && json.success),
-      message: json?.message || 'Admin user deleted successfully from MongoDB Atlas',
+      message: json?.message || `Admin user deleted successfully from MongoDB Atlas`,
     };
   } catch (err: any) {
     return { success: false, message: err?.message || 'Failed to delete admin user' };

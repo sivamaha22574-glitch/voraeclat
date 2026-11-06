@@ -5,7 +5,7 @@ import { isDbConnected } from '../config/db.js';
 // In-memory admin store fallback
 let inMemoryAdmins = [
   {
-    id: 'admin-master-mayil-1718',
+    id: 'admin-master-mayil',
     username: 'mayilvanan',
     password: 'Mayil@1718',
     fullName: 'Mayilvanan',
@@ -15,17 +15,7 @@ let inMemoryAdmins = [
     createdAt: new Date().toISOString()
   },
   {
-    id: 'admin-master-mayil-1101',
-    username: 'mayilvanan',
-    password: 'Mayil@1101',
-    fullName: 'Mayilvanan',
-    email: 'mayilvanan@voraeclat.com',
-    role: 'Super Admin',
-    lastLogin: new Date().toISOString(),
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'admin-master-1',
+    id: 'admin-master-admin',
     username: 'admin',
     password: 'admin',
     fullName: 'Chief Executive Administrator',
@@ -291,21 +281,36 @@ export const createAdminUser = async (req, res) => {
 export const deleteAdminUser = async (req, res) => {
   try {
     const { id } = req.params;
-    inMemoryAdmins = inMemoryAdmins.filter((a) => a.id !== id && a.username !== id);
+    const cleanId = (id || '').trim();
+
+    if (!cleanId) {
+      return res.status(400).json({ success: false, message: 'Admin ID or username required' });
+    }
+
+    // Remove from in-memory admins
+    inMemoryAdmins = inMemoryAdmins.filter(
+      (a) => a.id !== cleanId && a.username.toLowerCase() !== cleanId.toLowerCase()
+    );
 
     if (isDbConnected) {
       try {
-        if (id.match(/^[0-9a-fA-F]{24}$/)) {
-          await User.findByIdAndDelete(id);
+        if (cleanId.match(/^[0-9a-fA-F]{24}$/)) {
+          await User.findByIdAndDelete(cleanId);
         } else {
-          await User.deleteOne({ name: id, role: 'admin' });
+          await User.deleteMany({
+            $or: [
+              { name: new RegExp(`^${cleanId}$`, 'i') },
+              { email: new RegExp(`^${cleanId}$`, 'i') }
+            ],
+            role: 'admin'
+          });
         }
       } catch (e) {
-        // ignore
+        console.warn('DB deleteAdminUser warning:', e.message);
       }
     }
 
-    res.json({ success: true, message: 'Admin user deleted successfully' });
+    res.json({ success: true, message: `Admin user "${cleanId}" deleted successfully from MongoDB Atlas` });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

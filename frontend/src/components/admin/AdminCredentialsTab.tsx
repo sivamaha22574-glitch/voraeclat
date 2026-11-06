@@ -183,23 +183,38 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
   };
 
   const handleDeleteAdmin = async (admin: AdminUser) => {
-    if (admin.username === currentUsername || admin.username === 'admin') {
-      alert('Cannot delete the currently active or primary super administrator account.');
+    if (admin.username === currentUsername) {
+      alert('You cannot delete your own currently active session account.');
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete administrator account "${admin.username}"?`)) {
+    if (adminUsers.length <= 1) {
+      alert('Cannot delete the last remaining administrator account. At least one admin must exist.');
       return;
     }
 
-    if (admin.id) {
-      const res = await deleteAdminUserInMongo(admin.id);
+    const confirmed = window.confirm(
+      `⚠️ DELETE ADMIN ACCOUNT\n\nAre you sure you want to permanently delete administrator account "${admin.username}" (${admin.fullName || admin.email}) from MongoDB Atlas?\n\nThis action cannot be undone.`
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    const targetId = admin.id || admin.username;
+    setIsLoadingUsers(true);
+    try {
+      const res = await deleteAdminUserInMongo(targetId);
       if (res.success) {
         onNotify(res.message);
-        loadAdminUsers();
+        setAdminUsers((prev) => prev.filter((u) => u.username !== admin.username && u.id !== targetId));
+        await loadAdminUsers();
       } else {
-        alert(res.message);
+        alert(res.message || 'Failed to delete administrator account.');
       }
+    } catch (e: any) {
+      alert(e?.message || 'Error occurred while deleting admin user.');
+    } finally {
+      setIsLoadingUsers(false);
     }
   };
 
@@ -485,14 +500,20 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
                     <div className="text-[10px] text-slate-400">{user.fullName || user.email || 'Store Operator'}</div>
                   </div>
 
-                  {user.username !== 'admin' && user.username !== currentUsername && (
+                  {user.username !== currentUsername ? (
                     <button
+                      type="button"
                       onClick={() => handleDeleteAdmin(user)}
-                      className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-950/50 transition-colors cursor-pointer"
-                      title="Delete Admin User"
+                      className="px-2.5 py-1 rounded-xl bg-rose-950/50 hover:bg-rose-900/70 text-rose-300 hover:text-white border border-rose-800/60 hover:border-rose-600 text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
+                      title={`Delete administrator ${user.username}`}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Delete</span>
                     </button>
+                  ) : (
+                    <span className="text-[10px] text-amber-400/80 font-bold px-2 py-0.5 rounded-md bg-amber-400/10 border border-amber-400/20">
+                      Active
+                    </span>
                   )}
                 </div>
               ))}
