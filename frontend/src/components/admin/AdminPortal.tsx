@@ -25,6 +25,8 @@ import {
   KeyRound,
   RefreshCw,
   X,
+  Trash2,
+  ShieldAlert,
 } from 'lucide-react';
 import { VoraeclatLogo } from '../VoraeclatLogo';
 import { AdDashboardTab } from './AdDashboardTab';
@@ -39,6 +41,7 @@ import {
   updateAdminCredentialsInMongo,
   resetAdminCredentialsInMongo,
   fetchAdminUsersFromMongo,
+  deleteAdminUserInMongo,
   AdminUser,
 } from '../../lib/mongoApi';
 import { CustomerOrder, CustomerUser, CategoryId, Product } from '../../types';
@@ -122,6 +125,57 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [isChangingCredentials, setIsChangingCredentials] = useState(false);
   const [changeModalError, setChangeModalError] = useState<string | null>(null);
   const [changeModalSuccess, setChangeModalSuccess] = useState<string | null>(null);
+
+  // Delete admin modal state on login screen
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [loginAdminUsers, setLoginAdminUsers] = useState<AdminUser[]>([]);
+  const [isLoadingLoginAdmins, setIsLoadingLoginAdmins] = useState(false);
+  const [deleteAdminError, setDeleteAdminError] = useState<string | null>(null);
+  const [deleteAdminSuccess, setDeleteAdminSuccess] = useState<string | null>(null);
+  const [adminToDeleteOnLogin, setAdminToDeleteOnLogin] = useState<AdminUser | null>(null);
+  const [isDeletingOnLogin, setIsDeletingOnLogin] = useState(false);
+
+  const loadLoginAdminUsers = async () => {
+    setIsLoadingLoginAdmins(true);
+    setDeleteAdminError(null);
+    try {
+      const users = await fetchAdminUsersFromMongo();
+      if (users && users.length > 0) {
+        setLoginAdminUsers(users);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setIsLoadingLoginAdmins(false);
+    }
+  };
+
+  const handleConfirmDeleteOnLogin = async (target: AdminUser) => {
+    const targetId = target.id || target.username;
+    if (loginAdminUsers.length <= 1) {
+      setDeleteAdminError('Cannot delete the last remaining administrator account. The store requires at least one admin.');
+      return;
+    }
+
+    setIsDeletingOnLogin(true);
+    setDeleteAdminError(null);
+    setDeleteAdminSuccess(null);
+    try {
+      const res = await deleteAdminUserInMongo(targetId);
+      if (res.success) {
+        setDeleteAdminSuccess(res.message || `Admin "${target.username}" deleted successfully from MongoDB Atlas`);
+        setLoginAdminUsers((prev) => prev.filter((u) => u.username !== target.username && u.id !== targetId));
+        setAdminToDeleteOnLogin(null);
+        await loadLoginAdminUsers();
+      } else {
+        setDeleteAdminError(res.message || 'Failed to delete administrator account.');
+      }
+    } catch (e: any) {
+      setDeleteAdminError(e?.message || 'Error occurred while deleting admin user.');
+    } finally {
+      setIsDeletingOnLogin(false);
+    }
+  };
 
   const handleDirectResetDefault = async () => {
     setIsChangingCredentials(true);
@@ -465,8 +519,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </button>
           </form>
 
-          {/* Direct Change Credentials Option on Login Screen */}
-          <div className="pt-2 border-t border-slate-800/80">
+          {/* Direct Credentials & Delete Admin Options on Login Screen */}
+          <div className="pt-2 border-t border-slate-800/80 grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => {
@@ -479,10 +533,25 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 setChangeModalSuccess(null);
                 setIsChangeModalOpen(true);
               }}
-              className="w-full py-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-800 border border-slate-800 hover:border-amber-400/60 text-slate-300 hover:text-amber-300 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-[0.99]"
+              className="w-full py-2.5 px-2 rounded-xl bg-slate-950/80 hover:bg-slate-800 border border-slate-800 hover:border-amber-400/60 text-slate-300 hover:text-amber-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-[0.99]"
             >
               <KeyRound className="w-3.5 h-3.5 text-amber-400" />
-              <span>Change Username & Password</span>
+              <span>Change Password</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                loadLoginAdminUsers();
+                setDeleteAdminError(null);
+                setDeleteAdminSuccess(null);
+                setAdminToDeleteOnLogin(null);
+                setIsDeleteModalOpen(true);
+              }}
+              className="w-full py-2.5 px-2 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/60 hover:border-rose-600 text-rose-300 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-[0.99]"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+              <span>Delete Admin User</span>
             </button>
           </div>
 
@@ -655,6 +724,161 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Admin User Modal (Accessible Directly from Login Screen) */}
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4 animate-in fade-in">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative text-white space-y-5 animate-in zoom-in-95">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                    <Trash2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-base text-white">Delete Administrator User</h3>
+                    <p className="text-[11px] text-slate-400">Permanently remove admin access from MongoDB Atlas</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDeleteModalOpen(false);
+                    setAdminToDeleteOnLogin(null);
+                  }}
+                  className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {deleteAdminError && (
+                <div className="p-3.5 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                  <span>{deleteAdminError}</span>
+                </div>
+              )}
+
+              {deleteAdminSuccess && (
+                <div className="p-3.5 rounded-xl bg-emerald-950/80 border border-emerald-800 text-emerald-300 text-xs flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>{deleteAdminSuccess}</span>
+                </div>
+              )}
+
+              {/* Admin Users List */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs text-slate-400 font-bold px-1">
+                  <span>Registered Admin Accounts ({loginAdminUsers.length})</span>
+                  <button
+                    type="button"
+                    onClick={loadLoginAdminUsers}
+                    className="text-amber-400 hover:text-amber-300 text-[11px] flex items-center gap-1 cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isLoadingLoginAdmins ? 'animate-spin' : ''}`} />
+                    <span>Refresh</span>
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  {isLoadingLoginAdmins ? (
+                    <div className="py-8 text-center text-xs text-slate-400 flex flex-col items-center gap-2">
+                      <RefreshCw className="w-5 h-5 animate-spin text-amber-400" />
+                      <span>Loading administrator accounts from MongoDB Atlas...</span>
+                    </div>
+                  ) : loginAdminUsers.length === 0 ? (
+                    <div className="py-8 text-center text-xs text-slate-500">
+                      No admin accounts found in database.
+                    </div>
+                  ) : (
+                    loginAdminUsers.map((user) => (
+                      <div
+                        key={user.username}
+                        className="p-3.5 bg-slate-950 rounded-2xl border border-slate-800 flex items-center justify-between gap-3 text-xs"
+                      >
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-white">{user.username}</span>
+                            <span className="text-[10px] bg-indigo-950 text-indigo-300 border border-indigo-800/40 px-2 py-0.5 rounded-md font-semibold">
+                              {user.role || 'Super Admin'}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-slate-400">
+                            {user.fullName || user.email || 'Administrator'}
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDeleteAdminError(null);
+                            setDeleteAdminSuccess(null);
+                            setAdminToDeleteOnLogin(user);
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/30 hover:border-rose-600 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Confirmation sub-box if user selected an admin to delete */}
+              {adminToDeleteOnLogin && (
+                <div className="p-4 bg-rose-950/40 border border-rose-800/80 rounded-2xl space-y-3 animate-in fade-in">
+                  <div className="text-xs text-rose-200">
+                    Are you sure you want to permanently delete administrator account{' '}
+                    <strong className="text-white font-mono font-bold">"{adminToDeleteOnLogin.username}"</strong>{' '}
+                    from MongoDB Atlas?
+                  </div>
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAdminToDeleteOnLogin(null)}
+                      disabled={isDeletingOnLogin}
+                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleConfirmDeleteOnLogin(adminToDeleteOnLogin)}
+                      disabled={isDeletingOnLogin}
+                      className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 text-white text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
+                    >
+                      {isDeletingOnLogin ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Deleting...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Confirm & Delete</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-2 border-t border-slate-800 flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDeleteModalOpen(false);
+                    setAdminToDeleteOnLogin(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -839,7 +1063,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   }`}
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Admin Users & Security</span>
+                <span>Admin Users</span>
+                <span className="text-[10px] bg-rose-500 text-white font-extrabold px-1.5 py-0.2 rounded-md">
+                  Delete & Manage
+                </span>
               </button>
             </div>
           </div>
