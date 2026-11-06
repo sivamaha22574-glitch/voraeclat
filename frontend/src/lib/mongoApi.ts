@@ -9,7 +9,7 @@ import { FranchiseLead } from '../data/franchiseLeads';
  * Includes offline-tolerant fallback and automatic retries to ensure 100% reliable operation.
  */
 
-// Dynamic base URL resolver: works whether running on Vite (5173), Express (5000), Vercel, Netlify, or VPS
+// Dynamic base URL resolver: works whether running on Vite (5173), Express (5000), Vercel, or VPS
 const getApiBase = (): string => {
   if (typeof window !== 'undefined' && window.location) {
     const { port, hostname, protocol } = window.location;

@@ -12,7 +12,7 @@ const distDir = path.join(frontendDir, 'dist');
 const rootPublicDir = path.join(rootDir, 'public');
 const backendPublicDir = path.join(rootDir, 'backend', 'public');
 
-console.log('🚀 Starting Voraeclat Netlify build...');
+console.log('🚀 Starting Voraeclat production build & sync...');
 console.log(`Root: ${rootDir}`);
 console.log(`Frontend: ${frontendDir}`);
 
@@ -41,19 +41,13 @@ function copyDirSync(src, dest) {
   }
 }
 
-// 3. Ensure root /public exists and has the build output (in case Netlify UI publishes /public)
+// 3. Sync to root public/
 console.log('\n📂 Copying dist output to root public/ directory...');
 copyDirSync(distDir, rootPublicDir);
 
-// 4. Create _redirects file in dist and public for Netlify SPA routing & API proxy
-const redirectsContent = '/api/*  http://103.181.21.153:5001/api/:splat  200!\n/*    /index.html   200\n';
-fs.writeFileSync(path.join(distDir, '_redirects'), redirectsContent, 'utf8');
-fs.writeFileSync(path.join(rootPublicDir, '_redirects'), redirectsContent, 'utf8');
-
-// 5. Also sync to backend/public if present
+// 4. Sync to backend/public if present
 if (fs.existsSync(path.join(rootDir, 'backend'))) {
   copyDirSync(distDir, backendPublicDir);
 }
 
-console.log('✅ Voraeclat build completed successfully for Netlify deployment!');
-
+console.log('✅ Voraeclat build and assets synchronized successfully!');
