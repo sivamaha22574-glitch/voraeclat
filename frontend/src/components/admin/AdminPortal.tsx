@@ -838,8 +838,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   : 'text-amber-300/80 hover:text-amber-300 hover:bg-slate-800/60'
                   }`}
               >
-                <KeyRound className="w-3.5 h-3.5" />
-                <span>Credentials & Security</span>
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Admin Users & Security</span>
               </button>
             </div>
           </div>
@@ -892,6 +892,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             currentCustomer={currentCustomer}
             orders={orders}
             onNotify={showToast}
+            onNavigateToAdmins={() => setActiveTab('security')}
           />
         )}
 
@@ -908,6 +909,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               }
             }}
             onNotify={showToast}
+            onLogout={handleLogout}
           />
         )}
       </main>

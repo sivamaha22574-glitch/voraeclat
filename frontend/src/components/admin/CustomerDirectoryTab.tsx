@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   MapPin,
   ExternalLink,
+  ShieldCheck,
 } from 'lucide-react';
 import { CustomerUser, CustomerOrder } from '../../types';
 import { fetchCustomersFromMongo } from '../../lib/mongoApi';
@@ -18,6 +19,7 @@ interface CustomerDirectoryTabProps {
   currentCustomer: CustomerUser | null;
   orders: CustomerOrder[];
   onNotify: (msg: string) => void;
+  onNavigateToAdmins?: () => void;
 }
 
 interface MockCustomerProfile {
@@ -35,6 +37,7 @@ export const CustomerDirectoryTab: React.FC<CustomerDirectoryTabProps> = ({
   currentCustomer,
   orders,
   onNotify,
+  onNavigateToAdmins,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [remoteCustomers, setRemoteCustomers] = useState<CustomerUser[]>([]);
@@ -126,6 +129,25 @@ export const CustomerDirectoryTab: React.FC<CustomerDirectoryTabProps> = ({
           Total Registered Parents: <strong className="text-slate-950 font-black">2,410</strong>
         </div>
       </div>
+
+      {onNavigateToAdmins && (
+        <div className="bg-gradient-to-r from-slate-900 to-indigo-950 border border-indigo-900 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-white shadow-md">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0" />
+            <div>
+              <span className="font-bold text-white">Need to Manage or Delete Staff Administrator Accounts?</span>
+              <p className="text-[11px] text-slate-300">View all executive admin accounts, add team members, or delete administrators.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onNavigateToAdmins}
+            className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-black transition-all shrink-0 cursor-pointer text-xs self-start sm:self-auto"
+          >
+            Manage & Delete Admin Users &rarr;
+          </button>
+        </div>
+      )}
 
       {/* Search */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between gap-4">
