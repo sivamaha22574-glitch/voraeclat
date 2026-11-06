@@ -4,10 +4,17 @@
   publish = "public"
 
 [[redirects]]
+  from = "/api/*"
+  to = "http://103.181.21.153:5001/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
 [build.environment]
   NODE_VERSION = "20"
+
 

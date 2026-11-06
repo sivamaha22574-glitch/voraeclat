@@ -45,8 +45,8 @@ function copyDirSync(src, dest) {
 console.log('\n📂 Copying dist output to root public/ directory...');
 copyDirSync(distDir, rootPublicDir);
 
-// 4. Create _redirects file in dist and public for Netlify SPA routing
-const redirectsContent = '/*    /index.html   200\n';
+// 4. Create _redirects file in dist and public for Netlify SPA routing & API proxy
+const redirectsContent = '/api/*  http://103.181.21.153:5001/api/:splat  200!\n/*    /index.html   200\n';
 fs.writeFileSync(path.join(distDir, '_redirects'), redirectsContent, 'utf8');
 fs.writeFileSync(path.join(rootPublicDir, '_redirects'), redirectsContent, 'utf8');
 
