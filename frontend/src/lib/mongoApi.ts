@@ -21,6 +21,14 @@ const getApiBase = (): string => {
   return '';
 };
 
+const isLocalDev = (): boolean => {
+  if (typeof window !== 'undefined' && window.location) {
+    const { hostname } = window.location;
+    return hostname === 'localhost' || hostname === '127.0.0.1';
+  }
+  return false;
+};
+
 // Robust fetch helper with timeout and fallback
 async function apiFetch<T = any>(endpoint: string, options?: RequestInit): Promise<T | null> {
   const url = `${getApiBase()}${endpoint}`;
@@ -37,8 +45,8 @@ async function apiFetch<T = any>(endpoint: string, options?: RequestInit): Promi
       return await res.json();
     }
 
-    // Direct localhost:5000 fallback if relative proxy fails (e.g. running standalone on port 5173)
-    if (!endpoint.startsWith('http')) {
+    // Only fallback to localhost:5000 during local development
+    if (isLocalDev() && !endpoint.startsWith('http')) {
       try {
         const directRes = await fetch(`http://localhost:5000${endpoint}`, {
           ...options,
@@ -55,7 +63,7 @@ async function apiFetch<T = any>(endpoint: string, options?: RequestInit): Promi
 
     return null;
   } catch (err) {
-    if (!endpoint.startsWith('http')) {
+    if (isLocalDev() && !endpoint.startsWith('http')) {
       try {
         const directRes = await fetch(`http://localhost:5000${endpoint}`, {
           ...options,

@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 import { Order } from '../models/Order.js';
 import { User } from '../models/User.js';
+import { isDbConnected } from '../config/db.js';
+
+let inMemoryOrders = [];
 
 // @desc    Create new order with full billing, customer, ad, and courier data
 // @route   POST /api/orders
@@ -50,7 +53,17 @@ export const createOrder = async (req, res) => {
 
     const orderId = req.body.orderId || `ORD-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
 
-    const existing = await Order.findOne({ orderId });
+    let existing = null;
+    if (isDbConnected) {
+      try {
+        existing = await Order.findOne({ orderId });
+      } catch (e) {
+        // fallback
+      }
+    }
+    if (!existing) {
+      existing = inMemoryOrders.find(o => o.orderId === orderId);
+    }
 
     const invoiceNumber = existing?.invoiceNumber || req.body.invoiceNumber || `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     const finalMobile = customerMobile || req.body.customerPhone || (deliveryAddress && deliveryAddress.phone) || existing?.customerMobile || '+91 9999999999';
@@ -151,29 +164,44 @@ export const createOrder = async (req, res) => {
       utmCampaign,
       utmContent,
       utmTerm,
-      customerNotes
+      customerNotes,
+      createdAt: existing?.createdAt || new Date().toISOString()
     };
 
-    // Upsert directly to MongoDB Atlas
-    const order = await Order.findOneAndUpdate(
-      { orderId },
-      { $set: orderPayload },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+    let savedOrder = orderPayload;
 
-    // Update customer spend stats if user exists
-    if (customerMobile) {
-      await User.findOneAndUpdate(
-        { mobile: customerMobile },
-        {
-          $inc: { totalOrders: 1, totalSpent: computedTotal },
-          $setOnInsert: { name: customerName, email: customerEmail }
-        },
-        { upsert: true }
-      );
+    if (isDbConnected) {
+      try {
+        savedOrder = await Order.findOneAndUpdate(
+          { orderId },
+          { $set: orderPayload },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+
+        if (customerMobile) {
+          await User.findOneAndUpdate(
+            { mobile: customerMobile },
+            {
+              $inc: { totalOrders: 1, totalSpent: computedTotal },
+              $setOnInsert: { name: customerName, email: customerEmail }
+            },
+            { upsert: true }
+          ).catch(() => {});
+        }
+      } catch (dbErr) {
+        console.warn('DB createOrder warning:', dbErr.message);
+      }
     }
 
-    res.status(201).json({ success: true, data: order });
+    // Always maintain in-memory cache
+    const memIdx = inMemoryOrders.findIndex(o => o.orderId === orderId);
+    if (memIdx !== -1) {
+      inMemoryOrders[memIdx] = { ...inMemoryOrders[memIdx], ...orderPayload };
+    } else {
+      inMemoryOrders.unshift(orderPayload);
+    }
+
+    res.status(201).json({ success: true, data: savedOrder });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
@@ -185,22 +213,37 @@ export const createOrder = async (req, res) => {
 export const getOrderById = async (req, res) => {
   try {
     const { id } = req.params;
-    const isValidObjectId = mongoose.Types.ObjectId.isValid(id) && id.length === 24;
-    const order = await Order.findOne({
-      $or: [
-        { orderId: id },
-        { invoiceNumber: id },
-        { trackingNumber: id },
-        { awbNumber: id },
-        ...(isValidObjectId ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])
-      ]
-    });
 
-    if (!order) {
+    if (isDbConnected) {
+      try {
+        const isValidObjectId = mongoose.Types.ObjectId.isValid(id) && id.length === 24;
+        const order = await Order.findOne({
+          $or: [
+            { orderId: id },
+            { invoiceNumber: id },
+            { trackingNumber: id },
+            { awbNumber: id },
+            ...(isValidObjectId ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])
+          ]
+        });
+
+        if (order) {
+          return res.json({ success: true, data: order });
+        }
+      } catch (dbErr) {
+        console.warn('DB getOrderById warning:', dbErr.message);
+      }
+    }
+
+    const memOrder = inMemoryOrders.find(
+      o => o.orderId === id || o.invoiceNumber === id || o.trackingNumber === id || o.awbNumber === id
+    );
+
+    if (!memOrder) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    res.json({ success: true, data: order });
+    res.json({ success: true, data: memOrder });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -212,14 +255,27 @@ export const getOrderById = async (req, res) => {
 export const getCustomerOrders = async (req, res) => {
   try {
     const { identifier } = req.params;
-    const orders = await Order.find({
-      $or: [
-        { customerMobile: identifier },
-        { customerEmail: identifier }
-      ]
-    }).sort({ createdAt: -1 });
 
-    res.json({ success: true, count: orders.length, data: orders });
+    if (isDbConnected) {
+      try {
+        const orders = await Order.find({
+          $or: [
+            { customerMobile: identifier },
+            { customerEmail: identifier }
+          ]
+        }).sort({ createdAt: -1 });
+
+        return res.json({ success: true, count: orders.length, data: orders });
+      } catch (dbErr) {
+        console.warn('DB getCustomerOrders warning:', dbErr.message);
+      }
+    }
+
+    const filtered = inMemoryOrders.filter(
+      o => o.customerMobile === identifier || o.customerEmail === identifier
+    );
+
+    res.json({ success: true, count: filtered.length, data: filtered });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -231,31 +287,62 @@ export const getCustomerOrders = async (req, res) => {
 export const getAllOrders = async (req, res) => {
   try {
     const { status, courierPartner, paymentMode, search } = req.query;
-    const filter = {};
 
-    if (status && status !== 'all') filter.status = status;
-    if (courierPartner && courierPartner !== 'all') filter.courierPartner = courierPartner;
-    if (paymentMode && paymentMode !== 'all') filter.paymentMode = paymentMode;
+    if (isDbConnected) {
+      try {
+        const filter = {};
+        if (status && status !== 'all') filter.status = status;
+        if (courierPartner && courierPartner !== 'all') filter.courierPartner = courierPartner;
+        if (paymentMode && paymentMode !== 'all') filter.paymentMode = paymentMode;
 
-    if (search) {
-      filter.$or = [
-        { orderId: { $regex: search, $options: 'i' } },
-        { customerName: { $regex: search, $options: 'i' } },
-        { customerMobile: { $regex: search, $options: 'i' } },
-        { trackingNumber: { $regex: search, $options: 'i' } },
-        { awbNumber: { $regex: search, $options: 'i' } },
-        { 'deliveryAddress.city': { $regex: search, $options: 'i' } }
-      ];
+        if (search) {
+          filter.$or = [
+            { orderId: { $regex: search, $options: 'i' } },
+            { customerName: { $regex: search, $options: 'i' } },
+            { customerMobile: { $regex: search, $options: 'i' } },
+            { trackingNumber: { $regex: search, $options: 'i' } },
+            { awbNumber: { $regex: search, $options: 'i' } },
+            { 'deliveryAddress.city': { $regex: search, $options: 'i' } }
+          ];
+        }
+
+        const orders = await Order.find(filter).sort({ createdAt: -1 });
+        const totalRevenue = orders.reduce((acc, o) => acc + (o.totalAmount || 0), 0);
+
+        return res.json({
+          success: true,
+          count: orders.length,
+          totalRevenue,
+          data: orders,
+          source: 'mongodb'
+        });
+      } catch (dbErr) {
+        console.warn('DB getAllOrders warning, using in-memory store:', dbErr.message);
+      }
     }
 
-    const orders = await Order.find(filter).sort({ createdAt: -1 });
-    const totalRevenue = orders.reduce((acc, o) => acc + (o.totalAmount || 0), 0);
+    // In-memory fallback
+    let filtered = [...inMemoryOrders];
+    if (status && status !== 'all') filtered = filtered.filter(o => o.status === status);
+    if (courierPartner && courierPartner !== 'all') filtered = filtered.filter(o => o.courierPartner === courierPartner);
+    if (paymentMode && paymentMode !== 'all') filtered = filtered.filter(o => o.paymentMode === paymentMode);
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(o =>
+        (o.orderId && o.orderId.toLowerCase().includes(q)) ||
+        (o.customerName && o.customerName.toLowerCase().includes(q)) ||
+        (o.customerMobile && o.customerMobile.includes(q))
+      );
+    }
+
+    const totalRevenue = filtered.reduce((acc, o) => acc + (o.totalAmount || 0), 0);
 
     res.json({
       success: true,
-      count: orders.length,
+      count: filtered.length,
       totalRevenue,
-      data: orders
+      data: filtered,
+      source: isDbConnected ? 'mongodb' : 'in-memory-fallback'
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -274,15 +361,12 @@ export const updateOrderStatus = async (req, res) => {
       awbNumber,
       courierPartner,
       courierContact,
-      // Out for Delivery fields
       outForDeliveryAt,
       deliveryAgentName,
       deliveryAgentPhone,
       deliveryOtp,
-      // Delivery Pending fields
       deliveryPendingReason,
       rescheduledDeliveryDate,
-      // Payment & Settlement fields
       paymentStatus,
       codCollectionStatus
     } = req.body;
@@ -304,7 +388,6 @@ export const updateOrderStatus = async (req, res) => {
     if (req.body.customerName) updateFields.customerName = req.body.customerName;
     if (req.body.customerMobile) updateFields.customerMobile = req.body.customerMobile;
 
-    // Special status handlers
     if (status === 'Out for Delivery') {
       updateFields.outForDeliveryAt = outForDeliveryAt || new Date();
       if (deliveryAgentName) updateFields.deliveryAgentName = deliveryAgentName;
@@ -335,25 +418,38 @@ export const updateOrderStatus = async (req, res) => {
 
     if (codCollectionStatus) updateFields.codCollectionStatus = codCollectionStatus;
 
-    const isValidObjectId = mongoose.Types.ObjectId.isValid(id) && id.length === 24;
-    const order = await Order.findOneAndUpdate(
-      {
-        $or: [
-          { orderId: id },
-          ...(isValidObjectId ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])
-        ]
-      },
-      updateDoc,
-      { new: true }
-    );
+    let updatedOrder = null;
 
-    if (!order) {
-      console.warn(`[MongoDB Order Update]: Matched: 0, Modified: 0 | id: "${id}"`);
-      return res.status(404).json({ success: false, matchedCount: 0, modifiedCount: 0, message: 'Order not found' });
+    if (isDbConnected) {
+      try {
+        const isValidObjectId = mongoose.Types.ObjectId.isValid(id) && id.length === 24;
+        updatedOrder = await Order.findOneAndUpdate(
+          {
+            $or: [
+              { orderId: id },
+              ...(isValidObjectId ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])
+            ]
+          },
+          updateDoc,
+          { new: true }
+        );
+      } catch (dbErr) {
+        console.warn('DB updateOrderStatus warning:', dbErr.message);
+      }
     }
 
-    console.log(`[MongoDB Order Update]: Matched: 1, Modified: 1 | Order: ${order.orderId} | New Status: ${order.status}`);
-    res.json({ success: true, matchedCount: 1, modifiedCount: 1, data: order });
+    // Update in-memory
+    const memIdx = inMemoryOrders.findIndex(o => o.orderId === id || o.id === id);
+    if (memIdx !== -1) {
+      inMemoryOrders[memIdx] = { ...inMemoryOrders[memIdx], ...updateFields };
+      if (!updatedOrder) updatedOrder = inMemoryOrders[memIdx];
+    }
+
+    if (!updatedOrder) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    res.json({ success: true, matchedCount: 1, modifiedCount: 1, data: updatedOrder });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }

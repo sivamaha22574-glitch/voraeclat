@@ -12,12 +12,16 @@ dotenv.config();
 
 export let isDbConnected = false;
 
+// Disable Mongoose command buffering so queries fail fast to in-memory fallback instead of hanging for 10s
+mongoose.set('bufferCommands', false);
+mongoose.set('bufferTimeoutMS', 2000);
+
 export const connectDB = async () => {
-  const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/voraeclat';
+  const uri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/voraeclat';
   console.log('[Connecting to URI]:', uri.replace(/:[^:]*@/, ':****@'));
   try {
     const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 10000
+      serverSelectionTimeoutMS: 5000
     });
     isDbConnected = true;
     console.log(`[MongoDB Connected]: ${conn.connection.host}`);
@@ -26,6 +30,14 @@ export const connectDB = async () => {
     isDbConnected = false;
     console.warn(`[MongoDB Notice]: Database connection failed (${error.message}).`);
     console.warn(`Backend is active in In-Memory/Offline-tolerant mode. All API routes remain responsive.`);
+
+    // Auto-retry connection in the background every 30 seconds
+    setTimeout(() => {
+      if (!isDbConnected) {
+        connectDB().catch(() => {});
+      }
+    }, 30000);
+
     return null;
   }
 };
