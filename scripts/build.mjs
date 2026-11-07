@@ -18,7 +18,7 @@ console.log(`Frontend: ${frontendDir}`);
 
 // 1. Install frontend dependencies
 console.log('\n📦 Installing frontend dependencies...');
-execSync('npm install', { cwd: frontendDir, stdio: 'inherit' });
+execSync('npm install --include=dev', { cwd: frontendDir, stdio: 'inherit' });
 
 // 2. Build frontend with Vite
 console.log('\n⚡ Building frontend with Vite...');
