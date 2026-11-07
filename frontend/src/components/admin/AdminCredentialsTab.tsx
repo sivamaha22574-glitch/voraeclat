@@ -196,6 +196,11 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
     const target = adminToDelete;
     const targetId = target.id || target.username;
     const isSelf = target.username.toLowerCase() === currentUsername.toLowerCase();
+    const remainingMatchingUsers = adminUsers.filter(
+      (u) => u.username.toLowerCase() === currentUsername.toLowerCase()
+    );
+    // If there are duplicate accounts with same username (e.g. 2 mayilvanan), deleting one duplicate does NOT log out
+    const willLogOut = isSelf && remainingMatchingUsers.length <= 1;
 
     if (adminUsers.length <= 1) {
       setDeleteError('Cannot delete the last remaining administrator account. The store requires at least one admin.');
@@ -208,10 +213,13 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
       const res = await deleteAdminUserInMongo(targetId);
       if (res.success) {
         onNotify(res.message || `Admin user "${target.username}" deleted successfully from MongoDB Atlas`);
-        setAdminUsers((prev) => prev.filter((u) => u.username !== target.username && u.id !== targetId));
+        // Remove only this target instance by id or username
+        setAdminUsers((prev) =>
+          prev.filter((u) => (target.id ? u.id !== target.id : u.username !== target.username))
+        );
         setAdminToDelete(null);
 
-        if (isSelf) {
+        if (willLogOut) {
           if (onLogout) {
             onLogout();
           } else {
@@ -240,6 +248,84 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
       (u.role && u.role.toLowerCase().includes(q))
     );
   });
+
+  // Reusable Authorized Administrators Card (with always-visible Delete button on every row)
+  const renderAuthorizedAdminsCard = () => (
+    <div className="bg-slate-900 rounded-3xl p-6 border border-slate-800 shadow-xl text-white space-y-4">
+      <div className="flex items-center justify-between pb-1">
+        <h3 className="font-extrabold text-sm text-slate-200 flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-indigo-400" />
+          <span>Authorized Administrators ({adminUsers.length})</span>
+        </h3>
+        <button
+          type="button"
+          onClick={loadAdminUsers}
+          className="text-slate-400 hover:text-amber-400 text-xs flex items-center gap-1 transition-colors p-1"
+          title="Refresh Administrator list"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isLoadingUsers ? 'animate-spin text-amber-400' : ''}`} />
+        </button>
+      </div>
+
+      <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+        {isLoadingUsers ? (
+          <div className="py-8 text-center text-xs text-slate-400 flex flex-col items-center gap-2">
+            <RefreshCw className="w-5 h-5 animate-spin text-amber-400" />
+            <span>Loading administrators from MongoDB Atlas...</span>
+          </div>
+        ) : adminUsers.length === 0 ? (
+          <div className="py-6 text-center text-xs text-slate-500">
+            No administrator accounts registered.
+          </div>
+        ) : (
+          adminUsers.map((user, idx) => {
+            const isSelf = user.username.toLowerCase() === currentUsername.toLowerCase();
+            return (
+              <div
+                key={user.id || `${user.username}-${idx}`}
+                className="bg-slate-950 p-4 rounded-2xl border border-slate-800 hover:border-slate-700 flex items-center justify-between gap-3 text-xs transition-all shadow-inner"
+              >
+                <div className="space-y-1 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono font-bold text-white text-sm">{user.username}</span>
+                    {isSelf && (
+                      <span className="text-[9px] bg-amber-400 text-slate-950 font-black px-1.5 py-0.5 rounded-md uppercase tracking-wide">
+                        You
+                      </span>
+                    )}
+                    <span className="text-[10px] bg-indigo-950 text-indigo-300 border border-indigo-800/50 px-2 py-0.5 rounded-md font-semibold">
+                      {user.role || 'Super Admin'}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-400 truncate">
+                    {user.fullName || user.email || 'Mayilvanan'}
+                  </div>
+                </div>
+
+                {/* Always show Delete button for EVERY admin user */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeleteError(null);
+                    setAdminToDelete(user);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/40 hover:border-rose-600 text-xs font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95 shrink-0"
+                  title={`Delete administrator ${user.username}`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete</span>
+                </button>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+        <span>Click <strong className="text-rose-400 font-bold">Delete</strong> to permanently remove duplicate or inactive admins.</span>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
@@ -334,6 +420,9 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
             </div>
           </div>
 
+          {/* Authorized Administrators Card (with instant Delete button) */}
+          {renderAuthorizedAdminsCard()}
+
           {/* Administrators Table */}
           <div className="bg-slate-900 rounded-3xl border border-slate-800 shadow-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/50">
@@ -366,11 +455,11 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
                       </td>
                     </tr>
                   ) : (
-                    filteredUsers.map((user) => {
+                    filteredUsers.map((user, index) => {
                       const isSelf = user.username.toLowerCase() === currentUsername.toLowerCase();
                       return (
                         <tr
-                          key={user.username}
+                          key={user.id || `${user.username}-${index}`}
                           className={`hover:bg-slate-800/40 transition-colors ${
                             isSelf ? 'bg-amber-400/5' : ''
                           }`}
@@ -631,6 +720,9 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* Authorized Administrators Card (with Delete button) */}
+            {renderAuthorizedAdminsCard()}
           </div>
         </div>
       )}
@@ -662,15 +754,30 @@ export const AdminCredentialsTab: React.FC<AdminCredentialsTabProps> = ({
                 <span className="text-slate-400">Role:</span>
                 <span className="text-indigo-300">{adminToDelete.role || 'Super Admin'}</span>
               </div>
+              {adminToDelete.id && (
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Account ID:</span>
+                  <span className="font-mono text-[11px] text-slate-500">{adminToDelete.id}</span>
+                </div>
+              )}
             </div>
 
             {adminToDelete.username.toLowerCase() === currentUsername.toLowerCase() ? (
-              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs flex items-start gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Warning:</strong> You are about to delete your own currently logged-in account. If you confirm, this account will be permanently deleted from MongoDB Atlas and your session will be closed immediately.
-                </span>
-              </div>
+              adminUsers.filter((u) => u.username.toLowerCase() === currentUsername.toLowerCase()).length > 1 ? (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Duplicate Account:</strong> You have multiple administrator accounts named <strong>"{adminToDelete.username}"</strong>. Deleting this specific instance will remove it from MongoDB Atlas while your other account and current session remain active.
+                  </span>
+                </div>
+              ) : (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Warning:</strong> You are about to delete your own currently logged-in account. If you confirm, this account will be permanently deleted from MongoDB Atlas and your session will be closed immediately.
+                  </span>
+                </div>
+              )
             ) : (
               <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs flex items-start gap-2.5">
                 <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
