@@ -200,14 +200,22 @@ export const getAdminUsers = async (req, res) => {
       try {
         const dbAdmins = await User.find({ role: 'admin' }).select('-password');
         if (dbAdmins && dbAdmins.length > 0) {
-          const list = dbAdmins.map((a) => ({
-            id: a._id.toString(),
-            username: a.name || 'admin',
-            fullName: a.name || 'Chief Administrator',
-            email: a.email || 'admin@voraeclat.com',
-            role: 'Super Admin',
-            lastLogin: a.updatedAt
-          }));
+          const list = dbAdmins.map((a) => {
+            const rawUser = a.name && a.name.toLowerCase() !== 'admin'
+              ? a.name
+              : (a.email && a.email.includes('@') ? a.email.split('@')[0] : (a.name || 'admin'));
+            const cleanUser = rawUser.toLowerCase();
+            return {
+              id: a._id.toString(),
+              username: cleanUser,
+              fullName: a.name && a.name.toLowerCase() !== 'admin'
+                ? a.name
+                : (cleanUser === 'mayilvanan' ? 'Mayilvanan' : 'Chief Executive Administrator'),
+              email: a.email || `${cleanUser}@voraeclat.com`,
+              role: 'Super Admin',
+              lastLogin: a.updatedAt
+            };
+          });
           return res.json({ success: true, count: list.length, data: list });
         }
       } catch (e) {

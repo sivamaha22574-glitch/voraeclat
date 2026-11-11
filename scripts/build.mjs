@@ -42,11 +42,17 @@ function copyDirSync(src, dest) {
 }
 
 // 3. Sync to root public/
-console.log('\n📂 Copying dist output to root public/ directory...');
+console.log('\n📂 Cleaning and copying dist output to root public/ directory...');
+if (fs.existsSync(path.join(rootPublicDir, 'assets'))) {
+  fs.rmSync(path.join(rootPublicDir, 'assets'), { recursive: true, force: true });
+}
 copyDirSync(distDir, rootPublicDir);
 
 // 4. Sync to backend/public if present
 if (fs.existsSync(path.join(rootDir, 'backend'))) {
+  if (fs.existsSync(path.join(backendPublicDir, 'assets'))) {
+    fs.rmSync(path.join(backendPublicDir, 'assets'), { recursive: true, force: true });
+  }
   copyDirSync(distDir, backendPublicDir);
 }
 

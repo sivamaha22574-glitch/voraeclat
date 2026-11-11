@@ -253,4 +253,40 @@ export const upsertCustomer = async (req, res) => {
   }
 };
 
+// @desc    Delete user by ID or mobile
+// @route   DELETE /api/users/:id
+// @access  Public / Admin
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const cleanId = (id || '').trim();
+
+    if (!cleanId) {
+      return res.status(400).json({ success: false, message: 'User ID or mobile is required' });
+    }
+
+    let deleted;
+    if (cleanId.match(/^[0-9a-fA-F]{24}$/)) {
+      deleted = await User.findByIdAndDelete(cleanId);
+    } else {
+      deleted = await User.findOneAndDelete({
+        $or: [
+          { mobile: cleanId },
+          { mobile: cleanId.replace(/\s+/g, '') },
+          { email: cleanId }
+        ]
+      });
+    }
+
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({ success: true, message: `User "${deleted.name || deleted.mobile}" deleted successfully.` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 

@@ -30,7 +30,7 @@ const isLocalDev = (): boolean => {
 };
 
 // Robust fetch helper with timeout and fallback
-async function apiFetch<T = any>(endpoint: string, options?: RequestInit): Promise<T | null> {
+export async function apiFetch<T = any>(endpoint: string, options?: RequestInit): Promise<T | null> {
   const url = `${getApiBase()}${endpoint}`;
   try {
     const res = await fetch(url, {

@@ -6,7 +6,8 @@ import {
   updateUserProfile,
   getUsers,
   getUserByPhone,
-  upsertCustomer
+  upsertCustomer,
+  deleteUser
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -19,6 +20,7 @@ router.post('/login', loginUser);
 router.post('/register', registerUser);
 router.post('/upsert', upsertCustomer);
 router.get('/phone/:phone', getUserByPhone);
+router.delete('/:id', deleteUser);
 
 router.route('/profile')
   .get(protect, getUserProfile)
