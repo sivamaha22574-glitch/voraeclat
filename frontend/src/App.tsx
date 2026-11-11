@@ -21,14 +21,8 @@ import { Product, CategoryId, AgeGroup, Gender, CartItem, CustomerUser, Customer
 import { PRODUCTS, getStoredProducts, saveStoredProducts } from './data/products';
 import { Header } from './components/Header';
 import { ProductCard } from './components/ProductCard';
-import { ProductModal } from './components/ProductModal';
 import { CartDrawer } from './components/CartDrawer';
 import { WishlistDrawer } from './components/WishlistDrawer';
-import { PuppyClubModal } from './components/PuppyClubModal';
-import { ParentingHubModal } from './components/ParentingHubModal';
-import { CheckoutModal } from './components/CheckoutModal';
-import { CustomerLoginModal } from './components/CustomerLoginModal';
-import { CustomerAccountModal } from './components/CustomerAccountModal';
 import {
   getStoredCustomer,
   saveStoredCustomer,
@@ -37,18 +31,26 @@ import {
 } from './data/sampleOrders';
 import { Footer } from './components/Footer';
 import { FilterSidebar, FilterValues } from './components/FilterSidebar';
-import { FranchisePartnerPage } from './components/FranchisePartnerPage';
 import { CategoryHeaderBanner } from './components/CategoryHeaderBanner';
 import { HomePage } from './components/HomePage';
-import { ContactPage } from './components/ContactPage';
 import { DiwaliCollectionBanner } from './components/DiwaliCollectionBanner';
 import { BoySubcategoriesShowcase } from './components/BoySubcategoriesShowcase';
 import { GirlSubcategoriesShowcase } from './components/GirlSubcategoriesShowcase';
 import { BabySubcategoriesShowcase } from './components/BabySubcategoriesShowcase';
 import { CollectionsSubcategoriesShowcase } from './components/CollectionsSubcategoriesShowcase';
 import { BgTheme, getThemeDisplayName } from './components/Header';
-import { ThemeModal } from './components/ThemeModal';
-import { AdminPortal } from './components/admin/AdminPortal';
+
+// Code-split heavy views and modals with React.lazy to optimize bundle size and page load speed
+const AdminPortal = React.lazy(() => import('./components/admin/AdminPortal').then((m) => ({ default: m.AdminPortal })));
+const FranchisePartnerPage = React.lazy(() => import('./components/FranchisePartnerPage').then((m) => ({ default: m.FranchisePartnerPage })));
+const ContactPage = React.lazy(() => import('./components/ContactPage').then((m) => ({ default: m.ContactPage })));
+const ProductModal = React.lazy(() => import('./components/ProductModal').then((m) => ({ default: m.ProductModal })));
+const PuppyClubModal = React.lazy(() => import('./components/PuppyClubModal').then((m) => ({ default: m.PuppyClubModal })));
+const ParentingHubModal = React.lazy(() => import('./components/ParentingHubModal').then((m) => ({ default: m.ParentingHubModal })));
+const CheckoutModal = React.lazy(() => import('./components/CheckoutModal').then((m) => ({ default: m.CheckoutModal })));
+const CustomerLoginModal = React.lazy(() => import('./components/CustomerLoginModal').then((m) => ({ default: m.CustomerLoginModal })));
+const CustomerAccountModal = React.lazy(() => import('./components/CustomerAccountModal').then((m) => ({ default: m.CustomerAccountModal })));
+const ThemeModal = React.lazy(() => import('./components/ThemeModal').then((m) => ({ default: m.ThemeModal })));
 import {
   fetchOrdersFromMongo,
   insertOrderToMongo,
@@ -1079,36 +1081,45 @@ export default function App() {
   if (currentPage === 'admin') {
     return (
       <div data-theme="clean-slate" className="min-h-screen">
-        <AdminPortal
-          onBackToStore={() => {
-            setCurrentPage('home');
-            window.location.hash = '';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          orders={customerOrders}
-          onUpdateOrders={(updated) => {
-            setCustomerOrders(updated);
-            try {
-              localStorage.setItem('voraeclat_customer_orders', JSON.stringify(updated));
-              localStorage.removeItem('puppy_shame_customer_orders');
-            } catch {
-              // ignore
-            }
-          }}
-          currentCustomer={customer}
-          products={allProducts}
-          onUpdateProducts={(updated) => {
-            setAllProducts(updated);
-            saveStoredProducts(updated);
-            Promise.all(updated.map((p) => upsertProductToMongo(p))).catch(console.warn);
-          }}
-          onPreviewCategory={(cat) => {
-            setActiveCategory(cat);
-            setCurrentPage('shop');
-            window.location.hash = '';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-        />
+        <React.Suspense
+          fallback={
+            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950 text-slate-300 gap-3">
+              <div className="w-8 h-8 border-3 border-amber-400 border-t-transparent rounded-full animate-spin" />
+              <p className="text-xs font-semibold text-amber-400 tracking-wide uppercase">Opening Voraeclat Executive Admin Portal...</p>
+            </div>
+          }
+        >
+          <AdminPortal
+            onBackToStore={() => {
+              setCurrentPage('home');
+              window.location.hash = '';
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            orders={customerOrders}
+            onUpdateOrders={(updated) => {
+              setCustomerOrders(updated);
+              try {
+                localStorage.setItem('voraeclat_customer_orders', JSON.stringify(updated));
+                localStorage.removeItem('puppy_shame_customer_orders');
+              } catch {
+                // ignore
+              }
+            }}
+            currentCustomer={customer}
+            products={allProducts}
+            onUpdateProducts={(updated) => {
+              setAllProducts(updated);
+              saveStoredProducts(updated);
+              Promise.all(updated.map((p) => upsertProductToMongo(p))).catch(console.warn);
+            }}
+            onPreviewCategory={(cat) => {
+              setActiveCategory(cat);
+              setCurrentPage('shop');
+              window.location.hash = '';
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        </React.Suspense>
       </div>
     );
   }
@@ -1188,31 +1199,35 @@ export default function App() {
 
       {/* Page Routing: Franchise vs Contact vs Home vs Category Store */}
       {currentPage === 'franchise' ? (
-        <FranchisePartnerPage
-          onBackToStore={() => {
-            setCurrentPage('shop');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onBackToHome={() => {
-            setCurrentPage('home');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-        />
+        <React.Suspense fallback={<div className="py-20 text-center text-slate-400 text-xs">Loading Franchise Portal...</div>}>
+          <FranchisePartnerPage
+            onBackToStore={() => {
+              setCurrentPage('shop');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onBackToHome={() => {
+              setCurrentPage('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        </React.Suspense>
       ) : currentPage === 'contact' ? (
-        <ContactPage
-          onBackToHome={() => {
-            setCurrentPage('home');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onOpenFranchise={() => {
-            setCurrentPage('franchise');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          onOpenStore={() => {
-            setCurrentPage('shop');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-        />
+        <React.Suspense fallback={<div className="py-20 text-center text-slate-400 text-xs">Loading Contact...</div>}>
+          <ContactPage
+            onBackToHome={() => {
+              setCurrentPage('home');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onOpenFranchise={() => {
+              setCurrentPage('franchise');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onOpenStore={() => {
+              setCurrentPage('shop');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        </React.Suspense>
       ) : currentPage === 'home' ? (
         <HomePage
           onSelectCategory={(cat) => {
@@ -1749,20 +1764,24 @@ export default function App() {
         </div>
       )}
 
-      <ProductModal
-        product={quickViewProduct}
-        onClose={() => setQuickViewProduct(null)}
-        isWishlisted={quickViewProduct ? wishlist.some((p) => p.id === quickViewProduct.id) : false}
-        onToggleWishlist={handleToggleWishlist}
-        onAddToCart={handleAddToCart}
-        onBuyNow={(p, sz, clr) => {
-          handleAddToCart(p, sz, clr);
-          setQuickViewProduct(null);
-          setIsCheckoutOpen(true);
-        }}
-        deliveryPincode={deliveryPincode}
-        isClubMember={isClubMember}
-      />
+      <React.Suspense fallback={null}>
+        {quickViewProduct && (
+          <ProductModal
+            product={quickViewProduct}
+            onClose={() => setQuickViewProduct(null)}
+            isWishlisted={quickViewProduct ? wishlist.some((p) => p.id === quickViewProduct.id) : false}
+            onToggleWishlist={handleToggleWishlist}
+            onAddToCart={handleAddToCart}
+            onBuyNow={(p, sz, clr) => {
+              handleAddToCart(p, sz, clr);
+              setQuickViewProduct(null);
+              setIsCheckoutOpen(true);
+            }}
+            deliveryPincode={deliveryPincode}
+            isClubMember={isClubMember}
+          />
+        )}
+      </React.Suspense>
 
       <CartDrawer
         isOpen={isCartOpen}
@@ -1793,58 +1812,70 @@ export default function App() {
         onMoveToBag={handleMoveWishlistToBag}
       />
 
-      <PuppyClubModal
-        isOpen={isClubModalOpen}
-        onClose={() => setIsClubModalOpen(false)}
-        isClubMember={isClubMember}
-        onJoinClub={handleJoinClub}
-      />
+      <React.Suspense fallback={null}>
+        {isClubModalOpen && (
+          <PuppyClubModal
+            isOpen={isClubModalOpen}
+            onClose={() => setIsClubModalOpen(false)}
+            isClubMember={isClubMember}
+            onJoinClub={handleJoinClub}
+          />
+        )}
 
-      <ParentingHubModal
-        isOpen={isParentingHubOpen}
-        onClose={() => setIsParentingHubOpen(false)}
-        onSelectCategory={(cat) => {
-          setActiveCategory(cat);
-          setIsParentingHubOpen(false);
-        }}
-      />
+        {isParentingHubOpen && (
+          <ParentingHubModal
+            isOpen={isParentingHubOpen}
+            onClose={() => setIsParentingHubOpen(false)}
+            onSelectCategory={(cat) => {
+              setActiveCategory(cat);
+              setIsParentingHubOpen(false);
+            }}
+          />
+        )}
 
-      <CheckoutModal
-        isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-        items={cartItems}
-        appliedCoupon={appliedCoupon}
-        couponDiscount={couponDiscount}
-        isClubMember={isClubMember}
-        deliveryPincode={deliveryPincode}
-        onClearCart={() => setCartItems([])}
-        customer={customer}
-        onOrderPlaced={handleOrderPlaced}
-        onOpenOrderHistory={handleOpenAccountOrOrders}
-      />
+        {isCheckoutOpen && (
+          <CheckoutModal
+            isOpen={isCheckoutOpen}
+            onClose={() => setIsCheckoutOpen(false)}
+            items={cartItems}
+            appliedCoupon={appliedCoupon}
+            couponDiscount={couponDiscount}
+            isClubMember={isClubMember}
+            deliveryPincode={deliveryPincode}
+            onClearCart={() => setCartItems([])}
+            customer={customer}
+            onOrderPlaced={handleOrderPlaced}
+            onOpenOrderHistory={handleOpenAccountOrOrders}
+          />
+        )}
 
-      {/* Customer Mobile Login Modal (Matching Reference UI) */}
-      <CustomerLoginModal
-        isOpen={isCustomerLoginOpen}
-        onClose={() => setIsCustomerLoginOpen(false)}
-        onLoginSuccess={handleLoginSuccess}
-        intentAction={customerLoginIntent}
-      />
+        {/* Customer Mobile Login Modal (Matching Reference UI) */}
+        {isCustomerLoginOpen && (
+          <CustomerLoginModal
+            isOpen={isCustomerLoginOpen}
+            onClose={() => setIsCustomerLoginOpen(false)}
+            onLoginSuccess={handleLoginSuccess}
+            intentAction={customerLoginIntent}
+          />
+        )}
 
-      {/* Customer Order History & Account Details Modal */}
-      <CustomerAccountModal
-        isOpen={isCustomerAccountOpen}
-        onClose={() => setIsCustomerAccountOpen(false)}
-        customer={customer}
-        orders={customerOrders}
-        onLogout={handleLogoutCustomer}
-        onUpdateCustomer={handleUpdateCustomer}
-        onReorder={handleReorder}
-        onApplyCoupon={(code) => {
-          handleApplyCoupon(code);
-          showToast(`Coupon ${code} applied successfully!`);
-        }}
-      />
+        {/* Customer Order History & Account Details Modal */}
+        {isCustomerAccountOpen && (
+          <CustomerAccountModal
+            isOpen={isCustomerAccountOpen}
+            onClose={() => setIsCustomerAccountOpen(false)}
+            customer={customer}
+            orders={customerOrders}
+            onLogout={handleLogoutCustomer}
+            onUpdateCustomer={handleUpdateCustomer}
+            onReorder={handleReorder}
+            onApplyCoupon={(code) => {
+              handleApplyCoupon(code);
+              showToast(`Coupon ${code} applied successfully!`);
+            }}
+          />
+        )}
+      </React.Suspense>
 
       {/* Sleek Mobile Bottom Navigation Bar for Native App Feel */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-3 py-2 flex items-center justify-around shadow-xl">
@@ -1921,12 +1952,16 @@ export default function App() {
       </nav>
 
       {/* Overall Website Theme Customizer Modal */}
-      <ThemeModal
-        isOpen={isThemeModalOpen}
-        onClose={() => setIsThemeModalOpen(false)}
-        currentTheme={bgTheme}
-        onSelectTheme={handleUpdateTheme}
-      />
+      <React.Suspense fallback={null}>
+        {isThemeModalOpen && (
+          <ThemeModal
+            isOpen={isThemeModalOpen}
+            onClose={() => setIsThemeModalOpen(false)}
+            currentTheme={bgTheme}
+            onSelectTheme={handleUpdateTheme}
+          />
+        )}
+      </React.Suspense>
     </div>
   );
 }
