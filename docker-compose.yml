@@ -13,8 +13,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5000
-      - MONGODB_URI=mongodb+srv://mayil:Mayil4446@cluster0.yz0ig7h.mongodb.net/voraeclat?retryWrites=true&w=majority&appName=Cluster0
-      - MONGO_URI=mongodb+srv://mayil:Mayil4446@cluster0.yz0ig7h.mongodb.net/voraeclat?retryWrites=true&w=majority&appName=Cluster0
+      - MONGODB_URI=mongodb+srv://mayil:mayil12345@cluster0.yz0ig7h.mongodb.net/voraeclat?retryWrites=true&w=majority&appName=Cluster0
+      - MONGO_URI=mongodb+srv://mayil:mayil12345@cluster0.yz0ig7h.mongodb.net/voraeclat?retryWrites=true&w=majority&appName=Cluster0
       - JWT_SECRET=voraeclat_super_secure_jwt_secret_key_2026
       - CLIENT_URL=http://localhost
     networks:
