@@ -35,6 +35,7 @@ interface BannerSlide {
   themeHue: string;
   objectPosition?: 'center' | 'top' | 'bottom';
   fitMode?: 'cover' | 'contain';
+  aspectRatio?: string;
   isActive?: boolean;
 }
 
@@ -71,6 +72,7 @@ const buildHeroSlides = (fallbackSlides: BannerSlide[]): BannerSlide[] => {
           themeHue: palette.hue,
           objectPosition: b.objectPosition || 'center',
           fitMode: b.fitMode || 'cover',
+          aspectRatio: b.aspectRatio,
           isActive: b.isActive,
         };
       });
@@ -287,6 +289,9 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
         onClick={() => onSelectCategory(activeSlide.category)}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
+        style={{
+          ...(activeSlide.aspectRatio ? { aspectRatio: activeSlide.aspectRatio } : {}),
+        }}
       >
         {/* Responsive Slides */}
         <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
@@ -306,19 +311,20 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                   willChange: 'opacity',
                 }}
               >
-                {/* Ambient Soft Glow Backdrop to seamlessly blend non-standard aspect ratios */}
-                <div
-                  className="absolute inset-0 w-full h-full bg-cover bg-center blur-2xl opacity-40 scale-105 pointer-events-none"
-                  style={{ backgroundImage: `url(${imgSrc})` }}
-                />
+                {/* Ambient Soft Glow Backdrop only when containing non-matching ratios */}
+                {!isCover && (
+                  <div
+                    className="absolute inset-0 w-full h-full bg-cover bg-center blur-2xl opacity-40 scale-105 pointer-events-none"
+                    style={{ backgroundImage: `url(${imgSrc})` }}
+                  />
+                )}
 
                 <img
                   src={imgSrc}
                   alt={`${slide.title} ${slide.highlight}`}
-                  className={`hero-slide-img w-full h-full select-none ${
-                    isCover ? 'object-cover' : 'object-contain'
-                  } relative z-10`}
+                  className="hero-slide-img w-full h-full select-none relative z-10"
                   style={{
+                    objectFit: (slide.fitMode === 'contain' ? 'contain' : 'cover') as any,
                     objectPosition: slide.objectPosition || 'center',
                     imageRendering: '-webkit-optimize-contrast',
                     transform: 'translateZ(0)',

@@ -177,6 +177,10 @@ export async function fetchBannersFromMongo(): Promise<SiteBanner[] | null> {
         discountTag: b.discountTag,
         couponCode: b.couponCode,
         styleHighlights: b.styleHighlights,
+        fitMode: b.fitMode || 'cover',
+        objectPosition: b.objectPosition || 'center',
+        aspectRatio: b.aspectRatio,
+        isActive: b.isActive === true,
       }));
     }
     return null;

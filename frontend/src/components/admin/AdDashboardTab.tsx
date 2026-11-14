@@ -202,7 +202,30 @@ export const AdDashboardTab: React.FC<AdDashboardTabProps> = ({ onNotify }) => {
     });
     setSiteBanners(updated);
     saveStoredSiteBanners(updated);
+    const target = updated.find((b) => b.id === heroId);
+    if (target) {
+      syncHeroSlideUpdate(target);
+    }
     onNotify(`Hero Slide #${idx + 1} locked as the active stable storefront image!`);
+  };
+
+  const handleToggleFitMode = (bannerId: string) => {
+    const updated = siteBanners.map((b) => {
+      if (b.id === bannerId) {
+        const nextMode: 'cover' | 'contain' = b.fitMode === 'contain' ? 'cover' : 'contain';
+        return { ...b, fitMode: nextMode };
+      }
+      return b;
+    });
+    setSiteBanners(updated);
+    saveStoredSiteBanners(updated);
+    const target = updated.find((b) => b.id === bannerId);
+    if (target && target.group === 'hero') {
+      syncHeroSlideUpdate(target);
+    }
+    onNotify(
+      `Display fit updated to ${target?.fitMode === 'contain' ? 'Fit Whole Image (No Crop)' : 'Full Bleed (Cover)'}!`
+    );
   };
 
   const [campaigns, setCampaigns] = useState<AdCampaign[]>(() => getStoredAdCampaigns());
@@ -531,7 +554,22 @@ export const AdDashboardTab: React.FC<AdDashboardTabProps> = ({ onNotify }) => {
     compressAndLoadImage(
       file,
       (dataUrl, info) => {
-        const updated = siteBanners.map((b) => (b.id === bannerId ? { ...b, imageUrl: dataUrl } : b));
+        const ar = info?.width && info?.height ? `${info.width} / ${info.height}` : undefined;
+        const updated = siteBanners.map((b) => {
+          if (b.id === bannerId) {
+            return {
+              ...b,
+              imageUrl: dataUrl,
+              aspectRatio: ar || b.aspectRatio,
+              fitMode: b.fitMode || 'contain',
+              isActive: b.group === 'hero' ? true : b.isActive,
+            };
+          }
+          if (isHero && b.group === 'hero') {
+            return { ...b, isActive: false };
+          }
+          return b;
+        });
         setSiteBanners(updated);
         saveStoredSiteBanners(updated);
 
@@ -967,8 +1005,11 @@ export const AdDashboardTab: React.FC<AdDashboardTabProps> = ({ onNotify }) => {
                         <img
                           src={hero.imageUrl}
                           alt={hero.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          style={{ objectPosition: hero.objectPosition || 'center' }}
+                          className="w-full h-full group-hover:scale-105 transition-transform duration-300"
+                          style={{
+                            objectFit: (hero.fitMode === 'contain' ? 'contain' : 'cover') as any,
+                            objectPosition: hero.objectPosition || 'center',
+                          }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
 
@@ -991,6 +1032,25 @@ export const AdDashboardTab: React.FC<AdDashboardTabProps> = ({ onNotify }) => {
                           </label>
                         </div>
                       </div>
+
+                      {/* 1-Click Display Fit Toggle */}
+                      <button
+                        type="button"
+                        onClick={() => handleToggleFitMode(hero.id)}
+                        className="w-full py-1.5 px-2.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-[10px] font-bold text-slate-300 flex items-center justify-between cursor-pointer transition-colors shadow-xs"
+                        title="Click to toggle display fit mode"
+                      >
+                        <span className="text-slate-400">Display Fit:</span>
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-black ${
+                            hero.fitMode === 'contain'
+                              ? 'bg-sky-500/20 text-sky-300 border border-sky-400/30'
+                              : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                          }`}
+                        >
+                          {hero.fitMode === 'contain' ? 'Fit Whole Image (No Crop)' : 'Full Bleed (Cover)'}
+                        </span>
+                      </button>
 
                       {/* Text Details */}
                       <div className="space-y-1">

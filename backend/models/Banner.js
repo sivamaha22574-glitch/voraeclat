@@ -23,7 +23,9 @@ const bannerSchema = new mongoose.Schema({
   accentColor: { type: String, default: '#F59E0B' },
   objectPosition: { type: String, enum: ['center', 'top', 'bottom'], default: 'center' },
   fitMode: { type: String, enum: ['cover', 'contain'], default: 'cover' },
+  aspectRatio: { type: String },
   active: { type: Boolean, default: true },
+  isActive: { type: Boolean, default: false },
   orderIndex: { type: Number, default: 0 }
 }, {
   timestamps: true

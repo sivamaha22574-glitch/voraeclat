@@ -59,6 +59,9 @@ export const createBanner = async (req, res) => {
 
     const id = req.body.customId || req.body.id;
     if (isDbConnected) {
+      if (req.body.group === 'hero' && req.body.isActive) {
+        await Banner.updateMany({ group: 'hero', customId: { $ne: id } }, { $set: { isActive: false } });
+      }
       const banner = await Banner.findOneAndUpdate(
         { $or: [{ customId: id }, ...(id && id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])] },
         { ...req.body, customId: id },

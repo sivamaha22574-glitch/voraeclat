@@ -184,7 +184,8 @@ export async function loadPersistentBanners(): Promise<SiteBanner[]> {
           accentColor: b.accentColor,
           objectPosition: b.objectPosition,
           fitMode: b.fitMode,
-          isActive: b.active ?? b.isActive,
+          aspectRatio: b.aspectRatio,
+          isActive: b.isActive === true,
         }));
         setCachedSiteBanners(mongoBanners);
         try {
@@ -229,8 +230,19 @@ export async function syncHeroSlideUpdate(updatedHeroBanner: SiteBanner): Promis
   const currentBanners = await loadPersistentBanners();
   const existsInBanners = currentBanners.some((b) => b.id === updatedHeroBanner.id);
   const newBanners = existsInBanners
-    ? currentBanners.map((b) => (b.id === updatedHeroBanner.id ? updatedHeroBanner : b))
-    : [...currentBanners, updatedHeroBanner];
+    ? currentBanners.map((b) => {
+        if (b.id === updatedHeroBanner.id) return updatedHeroBanner;
+        if (updatedHeroBanner.group === 'hero' && updatedHeroBanner.isActive && b.group === 'hero') {
+          return { ...b, isActive: false };
+        }
+        return b;
+      })
+    : [
+        ...(updatedHeroBanner.group === 'hero' && updatedHeroBanner.isActive
+          ? currentBanners.map((b) => (b.group === 'hero' ? { ...b, isActive: false } : b))
+          : currentBanners),
+        updatedHeroBanner,
+      ];
 
   await savePersistentBanners(newBanners);
 

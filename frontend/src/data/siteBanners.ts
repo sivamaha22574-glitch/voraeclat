@@ -19,6 +19,7 @@ export interface SiteBanner {
   accentColor?: string;
   objectPosition?: 'center' | 'top' | 'bottom';
   fitMode?: 'cover' | 'contain';
+  aspectRatio?: string;
   isActive?: boolean;
 }
 
