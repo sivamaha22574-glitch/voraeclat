@@ -266,8 +266,7 @@ export const INITIAL_SITE_BANNERS: SiteBanner[] = [
     title: 'Playful Kidswear',
     underText:
       'Engineered for joyful childhood adventures: ultra-soft organic stretch cottons, durable reinforced knees, and vibrant breathable fits designed for non-stop playground fun.',
-    imageUrl:
-      'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=2560&q=95',
+    imageUrl: '/hero-playful-kidswear.webp',
     buttonText: 'Shop Playful Outfits →',
     buttonLink: 'baby-toddler',
     discountTag: 'FLAT 40% OFF',
@@ -284,8 +283,7 @@ export const INITIAL_SITE_BANNERS: SiteBanner[] = [
     title: 'Little Fashion, Big Happiness Sale',
     underText:
       'Celebrate every precious childhood milestone with twirling party dresses, sparkling ethnic festive coordinates, handsome boys formal sets, and celebration shoes.',
-    imageUrl:
-      'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=2560&q=95',
+    imageUrl: '/hero-happiness-sale.webp',
     buttonText: 'Explore Festive Sale →',
     buttonLink: 'festive-ethnic',
     discountTag: 'UP TO 60% OFF',
@@ -302,14 +300,14 @@ export const INITIAL_SITE_BANNERS: SiteBanner[] = [
     title: 'Little Trends, Big Smiles Everyday',
     underText:
       'Runway-inspired toddler style made comfy: cool denim coordinates, pastel knit cardigans, oversized vintage tees, and adorable matching sibling lounge sets.',
-    imageUrl:
-      'https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=2560&q=95',
+    imageUrl: '/hero-kids-shopping.webp',
     buttonText: 'Discover Trends →',
     buttonLink: 'girl-fashion',
     discountTag: 'STARTING ₹299',
     couponCode: 'SMILES15',
     objectPosition: 'center',
-    fitMode: 'cover',
+    fitMode: 'contain',
+    isActive: true,
   },
 ];
 
@@ -446,8 +444,17 @@ export const getStoredSiteBanners = (): SiteBanner[] => {
       localStorage.setItem(INITIALIZED_FLAG, 'true');
     }
 
-    // Auto-boost legacy low-resolution Unsplash links to crisp 2.5K
+    // Ensure hero banners exclusively use customer brand images instead of stock Unsplash photos
     map.forEach((b, key) => {
+      if (b.group === 'hero') {
+        if (!b.imageUrl || b.imageUrl.includes('images.unsplash.com')) {
+          if (b.id === 'banner-hero-stylish') map.set(key, { ...b, imageUrl: '/hero-everything-little-ones.png', fitMode: 'contain' });
+          else if (b.id === 'banner-hero-playful') map.set(key, { ...b, imageUrl: '/hero-playful-kidswear.webp', fitMode: 'cover' });
+          else if (b.id === 'banner-hero-festive') map.set(key, { ...b, imageUrl: '/hero-happiness-sale.webp', fitMode: 'cover' });
+          else if (b.id === 'banner-hero-trends') map.set(key, { ...b, imageUrl: '/hero-kids-shopping.webp', fitMode: 'contain' });
+        }
+      }
+
       if (
         b.imageUrl &&
         b.imageUrl.includes('images.unsplash.com') &&

@@ -39,9 +39,9 @@ interface BannerSlide {
   isActive?: boolean;
 }
 
-const buildHeroSlides = (fallbackSlides: BannerSlide[]): BannerSlide[] => {
+const buildHeroSlides = (fallbackSlides: BannerSlide[], sourceBanners?: import('../data/siteBanners').SiteBanner[]): BannerSlide[] => {
   try {
-    const siteBanners = getStoredSiteBanners();
+    const siteBanners = sourceBanners && sourceBanners.length > 0 ? sourceBanners : getStoredSiteBanners();
     const heroSiteBanners = siteBanners.filter((b) => b.group === 'hero');
 
     if (heroSiteBanners && heroSiteBanners.length > 0) {
@@ -56,6 +56,18 @@ const buildHeroSlides = (fallbackSlides: BannerSlide[]): BannerSlide[] => {
 
       return heroSiteBanners.map((b, idx) => {
         const palette = accentPalettes[idx % accentPalettes.length];
+
+        // Ensure hero slides exclusively resolve to authentic customer assets
+        let resolvedImage = b.imageUrl;
+        if (!resolvedImage || resolvedImage.includes('images.unsplash.com')) {
+          if (b.id === 'banner-hero-stylish' || idx === 0) resolvedImage = '/hero-everything-little-ones.png';
+          else if (b.id === 'banner-hero-playful' || idx === 1) resolvedImage = '/hero-playful-kidswear.webp';
+          else if (b.id === 'banner-hero-festive' || idx === 2) resolvedImage = '/hero-happiness-sale.webp';
+          else resolvedImage = '/hero-kids-shopping.webp';
+        }
+
+        const isContain = b.fitMode === 'contain' || resolvedImage.includes('shopping') || resolvedImage.includes('everything');
+
         return {
           id: b.id,
           badge: b.badge,
@@ -66,12 +78,12 @@ const buildHeroSlides = (fallbackSlides: BannerSlide[]): BannerSlide[] => {
           ctaText: (b.buttonText || 'Shop Now').replace(' →', ''),
           couponCode: b.couponCode || 'PUPPY20',
           discountBadge: b.discountTag || 'FLAT 40% OFF',
-          userImage: b.imageUrl,
-          fallbackImage: b.imageUrl,
+          userImage: resolvedImage,
+          fallbackImage: resolvedImage,
           accentColor: palette.accent,
           themeHue: palette.hue,
           objectPosition: b.objectPosition || 'center',
-          fitMode: b.fitMode || 'cover',
+          fitMode: isContain ? 'contain' : (b.fitMode || 'cover'),
           aspectRatio: b.aspectRatio,
           isActive: b.isActive,
         };
@@ -118,10 +130,8 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
       ctaText: 'Shop Playful Outfits',
       couponCode: 'PLAYGROW20',
       discountBadge: 'FLAT 40% OFF',
-      userImage:
-        'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=2560&q=95',
-      fallbackImage:
-        'https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=2560&q=95',
+      userImage: '/hero-playful-kidswear.webp',
+      fallbackImage: '/hero-playful-kidswear.webp',
       accentColor: 'from-rose-500 to-pink-400',
       themeHue: 'rose',
       objectPosition: 'center',
@@ -138,10 +148,8 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
       ctaText: 'Explore Festive Sale',
       couponCode: 'PUPPYFEST',
       discountBadge: 'UP TO 60% OFF',
-      userImage:
-        'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=2560&q=95',
-      fallbackImage:
-        'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?auto=format&fit=crop&w=2560&q=95',
+      userImage: '/hero-happiness-sale.webp',
+      fallbackImage: '/hero-happiness-sale.webp',
       accentColor: 'from-sky-500 to-cyan-400',
       themeHue: 'sky',
       objectPosition: 'center',
@@ -158,25 +166,24 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
       ctaText: 'Discover Trends',
       couponCode: 'SMILES15',
       discountBadge: 'STARTING ₹299',
-      userImage:
-        'https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=2560&q=95',
-      fallbackImage:
-        'https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=2560&q=95',
+      userImage: '/hero-kids-shopping.webp',
+      fallbackImage: '/hero-kids-shopping.webp',
       accentColor: 'from-purple-500 to-indigo-400',
       themeHue: 'purple',
       objectPosition: 'center',
-      fitMode: 'cover',
+      fitMode: 'contain',
+      isActive: true,
     },
   ];
 
   const [slides, setSlides] = useState<BannerSlide[]>(() => buildHeroSlides(fallbackSlides));
 
-  // Asynchronously warm up from IndexedDB on initial mount to restore ultra-sharp custom photos
+  // Asynchronously warm up from IndexedDB / MongoDB on initial mount to restore ultra-sharp custom customer photos
   useEffect(() => {
     loadPersistentBanners()
       .then((stored) => {
         if (stored && stored.length > 0) {
-          setSlides(buildHeroSlides(fallbackSlides));
+          setSlides(buildHeroSlides(fallbackSlides, stored));
         }
       })
       .catch(() => {});
