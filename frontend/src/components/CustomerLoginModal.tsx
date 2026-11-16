@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
-import { X, Check, ShieldCheck, ArrowRight, Sparkles, Phone, Lock, KeyRound, Mail } from 'lucide-react';
+import { X, Check, ShieldCheck, ArrowRight, Sparkles, Phone, Lock, KeyRound, Mail, RefreshCw } from 'lucide-react';
 import { CustomerUser } from '../types';
 import { saveStoredCustomer } from '../data/sampleOrders';
-import { fetchCustomerByPhone, fetchCustomerByEmailOrPhone, upsertCustomerToMongo } from '../lib/mongoApi';
+import {
+  fetchCustomerByPhone,
+  fetchCustomerByEmailOrPhone,
+  upsertCustomerToMongo,
+  sendOtpViaResend,
+  verifyOtpViaBackend
+} from '../lib/mongoApi';
 
 interface CustomerLoginModalProps {
   isOpen: boolean;
@@ -24,7 +30,9 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
   const [generatedOtp, setGeneratedOtp] = useState<string>('');
   const [otp, setOtp] = useState(['', '', '', '']);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [otpStatusMsg, setOtpStatusMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [existingUserFound, setExistingUserFound] = useState<CustomerUser | null>(null);
 
   // New Customer Profile fields
@@ -59,6 +67,7 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
     }
 
     setErrorMsg(null);
+    setOtpStatusMsg(null);
     setIsLoading(true);
 
     const formattedPhone = `+91 ${cleanNumber}`;
@@ -73,16 +82,47 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
       if (existing?.city) {
         setCustomerCity(existing.city);
       }
-    } catch {
-      setExistingUserFound(null);
+
+      // Send REAL 4-digit OTP via Resend email service
+      const res = await sendOtpViaResend(cleanEmail, formattedPhone, existing?.name);
+      if (res.sandboxOtp) {
+        setGeneratedOtp(res.sandboxOtp);
+      } else {
+        setGeneratedOtp('');
+      }
+
+      if (res.emailDelivered) {
+        setOtpStatusMsg(`Verification code sent to ${cleanEmail} via Resend!`);
+      } else if (res.message) {
+        setOtpStatusMsg(res.message);
+      }
+    } catch (err: any) {
+      console.warn('Resend OTP send error:', err);
+      const fallbackCode = Math.floor(1000 + Math.random() * 9000).toString();
+      setGeneratedOtp(fallbackCode);
     }
 
-    // Generate dynamic 4-digit verification code
-    const realCode = Math.floor(1000 + Math.random() * 9000).toString();
-    setGeneratedOtp(realCode);
     setOtp(['', '', '', '']);
     setIsLoading(false);
     setStep('otp');
+  };
+
+  const handleResendOtp = async () => {
+    const cleanEmail = emailInput.trim().toLowerCase();
+    const formattedPhone = `+91 ${mobileNumber.trim()}`;
+    setIsResending(true);
+    setErrorMsg(null);
+    try {
+      const res = await sendOtpViaResend(cleanEmail, formattedPhone, customerName || existingUserFound?.name);
+      if (res.sandboxOtp) {
+        setGeneratedOtp(res.sandboxOtp);
+      }
+      setOtpStatusMsg(`New verification code sent to ${cleanEmail}`);
+    } catch {
+      setErrorMsg('Failed to resend code. Please try again.');
+    } finally {
+      setIsResending(false);
+    }
   };
 
   const handleVerifyOtp = async (e?: React.FormEvent) => {
@@ -93,37 +133,52 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
       return;
     }
 
-    if (enteredOtp !== generatedOtp && enteredOtp !== '2026') {
-      setErrorMsg('Invalid verification code. Please check the code and try again.');
-      return;
-    }
-
     setErrorMsg(null);
     setIsLoading(true);
     const formattedPhone = `+91 ${mobileNumber}`;
     const cleanEmail = emailInput.trim().toLowerCase();
 
-    // If existing customer with a name already exists in MongoDB Atlas, log in directly
-    if (existingUserFound && existingUserFound.name && existingUserFound.name.trim().length > 0) {
-      const activeUser: CustomerUser = {
-        ...existingUserFound,
-        email: cleanEmail,
-        mobile: formattedPhone,
-        isLoggedIn: true,
-        notifyOffers,
-      };
-      await upsertCustomerToMongo(activeUser).catch(console.warn);
-      saveStoredCustomer(activeUser);
+    // 1. Verify through backend via MongoDB Otp model
+    const verifyRes = await verifyOtpViaBackend(cleanEmail, formattedPhone, enteredOtp, customerName);
+    if (verifyRes.success && verifyRes.data) {
+      saveStoredCustomer(verifyRes.data);
+      if (existingUserFound && existingUserFound.name && existingUserFound.name.trim().length > 0) {
+        setIsLoading(false);
+        onLoginSuccess(verifyRes.data);
+        onClose();
+        return;
+      }
+      setCustomerEmail(cleanEmail);
       setIsLoading(false);
-      onLoginSuccess(activeUser);
-      onClose();
+      setStep('profile');
       return;
     }
 
-    // Otherwise, move to Profile completion step to get their real name
-    setCustomerEmail(cleanEmail);
+    // 2. Fallback check for master bypass 2026 or sandbox OTP
+    if (enteredOtp === generatedOtp || enteredOtp === '2026') {
+      if (existingUserFound && existingUserFound.name && existingUserFound.name.trim().length > 0) {
+        const activeUser: CustomerUser = {
+          ...existingUserFound,
+          email: cleanEmail,
+          mobile: formattedPhone,
+          isLoggedIn: true,
+          notifyOffers,
+        };
+        await upsertCustomerToMongo(activeUser).catch(console.warn);
+        saveStoredCustomer(activeUser);
+        setIsLoading(false);
+        onLoginSuccess(activeUser);
+        onClose();
+        return;
+      }
+      setCustomerEmail(cleanEmail);
+      setIsLoading(false);
+      setStep('profile');
+      return;
+    }
+
+    setErrorMsg(verifyRes.message || 'Invalid verification code. Please check and try again.');
     setIsLoading(false);
-    setStep('profile');
   };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
@@ -304,7 +359,7 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
               <form onSubmit={handleVerifyOtp} className="space-y-4 animate-in fade-in slide-in-from-right-2 duration-150">
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 flex items-center justify-between">
                   <div className="min-w-0 pr-2">
-                    <p className="text-slate-500 text-[11px]">Verification code sent to:</p>
+                    <p className="text-slate-500 text-[11px]">Verification code sent via Resend to:</p>
                     <p className="font-bold text-slate-900 truncate">{emailInput}</p>
                     <p className="font-semibold text-slate-700">+91 {mobileNumber}</p>
                   </div>
@@ -313,12 +368,20 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
                     onClick={() => {
                       setStep('phone');
                       setErrorMsg(null);
+                      setOtpStatusMsg(null);
                     }}
                     className="text-amber-700 font-bold hover:underline cursor-pointer shrink-0"
                   >
                     Change
                   </button>
                 </div>
+
+                {otpStatusMsg && (
+                  <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200/80 text-xs text-emerald-800 flex items-center gap-2">
+                    <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>{otpStatusMsg}</span>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-2">
@@ -357,11 +420,24 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
                   )}
                 </div>
 
+                <div className="flex items-center justify-between text-xs text-slate-500 px-1">
+                  <span>Didn't receive email?</span>
+                  <button
+                    type="button"
+                    disabled={isResending}
+                    onClick={handleResendOtp}
+                    className="text-amber-700 font-bold hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isResending ? 'animate-spin' : ''}`} />
+                    <span>{isResending ? 'Sending...' : 'Resend Code'}</span>
+                  </button>
+                </div>
+
                 {generatedOtp && (
                   <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200/90 text-xs text-amber-900 flex items-center justify-between">
                     <span className="flex items-center gap-1.5 font-medium">
                       <KeyRound className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                      <span>Verification Code: <strong className="font-bold text-amber-950 tracking-wider text-sm">{generatedOtp}</strong></span>
+                      <span>Sandbox Code: <strong className="font-bold text-amber-950 tracking-wider text-sm">{generatedOtp}</strong></span>
                     </span>
                     <button
                       type="button"

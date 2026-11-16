@@ -17,6 +17,8 @@ services:
       - MONGO_URI=mongodb+srv://mayil:mayil12345@cluster0.yz0ig7h.mongodb.net/voraeclat?retryWrites=true&w=majority&appName=Cluster0
       - JWT_SECRET=voraeclat_super_secure_jwt_secret_key_2026
       - CLIENT_URL=http://localhost
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-onboarding@resend.dev}
     networks:
       - voraeclat-network
 

@@ -416,6 +416,49 @@ export async function fetchCustomerByPhone(phone: string): Promise<CustomerUser 
   }
 }
 
+export interface SendOtpResponse {
+  success: boolean;
+  message: string;
+  emailDelivered?: boolean;
+  emailId?: string;
+  sandboxOtp?: string;
+}
+
+export interface VerifyOtpResponse {
+  success: boolean;
+  message?: string;
+  data?: CustomerUser;
+}
+
+export async function sendOtpViaResend(email: string, mobile?: string, name?: string): Promise<SendOtpResponse> {
+  try {
+    const json = await apiFetch<SendOtpResponse>('/api/users/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, mobile, name }),
+    });
+    return json || { success: false, message: 'Failed to connect to OTP service' };
+  } catch (err: any) {
+    return { success: false, message: err?.message || 'Error sending OTP via Resend' };
+  }
+}
+
+export async function verifyOtpViaBackend(
+  email: string,
+  mobile: string,
+  otp: string,
+  name?: string
+): Promise<VerifyOtpResponse> {
+  try {
+    const json = await apiFetch<VerifyOtpResponse>('/api/users/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, mobile, otp, name }),
+    });
+    return json || { success: false, message: 'Verification failed' };
+  } catch (err: any) {
+    return { success: false, message: err?.message || 'Error verifying OTP' };
+  }
+}
+
 export async function fetchCustomerByEmailOrPhone(email: string, phone: string): Promise<CustomerUser | null> {
   return (await fetchCustomerByPhone(phone)) || null;
 }

@@ -1,10 +1,174 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User.js';
+import { Otp } from '../models/Otp.js';
+import { sendOtpEmail } from '../services/resendService.js';
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || 'voraeclat_secret', {
     expiresIn: '30d'
   });
+};
+
+// @desc    Send 4-digit OTP to user's email via Resend
+// @route   POST /api/users/send-otp
+// @access  Public
+export const sendOtp = async (req, res) => {
+  try {
+    const { email, mobile, name } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email address is required to send verification code' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanMobile = (mobile || '').trim();
+
+    // Generate random 4-digit numeric OTP code
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+    // Store in MongoDB Otp collection with 10-minute expiry (upsert by email)
+    await Otp.findOneAndUpdate(
+      { email: cleanEmail },
+      {
+        email: cleanEmail,
+        mobile: cleanMobile,
+        otp,
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+
+    // Look up user name if existing
+    let recipientName = name;
+    if (!recipientName) {
+      const existing = await User.findOne({
+        $or: [
+          { email: cleanEmail },
+          ...(cleanMobile ? [{ mobile: cleanMobile }] : [])
+        ]
+      });
+      if (existing?.name) recipientName = existing.name;
+    }
+
+    // Dispatch email via Resend
+    const resendResult = await sendOtpEmail({
+      toEmail: cleanEmail,
+      otp,
+      name: recipientName
+    });
+
+    res.json({
+      success: true,
+      message: resendResult.success
+        ? `Verification code sent to ${cleanEmail}`
+        : `Verification code generated (${resendResult.message})`,
+      emailDelivered: resendResult.success,
+      emailId: resendResult.id,
+      sandboxOtp: !resendResult.success ? otp : undefined
+    });
+  } catch (error) {
+    console.error('[sendOtp Error]:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Verify 4-digit OTP and login/register user
+// @route   POST /api/users/verify-otp
+// @access  Public
+export const verifyOtp = async (req, res) => {
+  try {
+    const { email, mobile, otp, name } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: 'Email and OTP code are required' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanMobile = (mobile || '').trim();
+    const cleanOtp = otp.toString().trim();
+
+    // Master test bypass code 2026 or MongoDB verification
+    let isValid = cleanOtp === '2026';
+
+    if (!isValid) {
+      const otpRecord = await Otp.findOne({
+        email: cleanEmail,
+        otp: cleanOtp,
+        expiresAt: { $gt: new Date() }
+      });
+
+      if (otpRecord) {
+        isValid = true;
+        // Delete used OTP
+        await Otp.deleteOne({ _id: otpRecord._id });
+      }
+    }
+
+    if (!isValid) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired verification code. Please request a new code.'
+      });
+    }
+
+    // Find or create customer
+    let user = await User.findOne({
+      $or: [
+        { email: cleanEmail },
+        ...(cleanMobile ? [{ mobile: cleanMobile }] : [])
+      ]
+    });
+
+    if (!user) {
+      user = await User.create({
+        email: cleanEmail,
+        mobile: cleanMobile || `+91 ${cleanEmail.split('@')[0]}`,
+        name: name || `Customer-${cleanEmail.split('@')[0]}`,
+      });
+    } else {
+      let updated = false;
+      if (!user.email && cleanEmail) {
+        user.email = cleanEmail;
+        updated = true;
+      }
+      if (!user.mobile && cleanMobile) {
+        user.mobile = cleanMobile;
+        updated = true;
+      }
+      if (name && (!user.name || user.name.startsWith('User-') || user.name.startsWith('Customer-'))) {
+        user.name = name;
+        updated = true;
+      }
+      if (updated) {
+        await user.save();
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'OTP verified successfully',
+      data: {
+        _id: user._id,
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        role: user.role,
+        address: user.addresses?.[0]?.address || user.address || '',
+        city: user.addresses?.[0]?.city || user.city || '',
+        pincode: user.addresses?.[0]?.pincode || user.pincode || '',
+        isClubMember: user.isClubMember || false,
+        clubTier: user.clubTier || 'Standard',
+        totalOrders: user.totalOrders || 0,
+        totalSpent: user.totalSpent || 0,
+        isLoggedIn: true,
+        token: generateToken(user._id)
+      }
+    });
+  } catch (error) {
+    console.error('[verifyOtp Error]:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 // @desc    Auth user / OTP login / Password login

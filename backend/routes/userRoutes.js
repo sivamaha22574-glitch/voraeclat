@@ -7,7 +7,9 @@ import {
   getUsers,
   getUserByPhone,
   upsertCustomer,
-  deleteUser
+  deleteUser,
+  sendOtp,
+  verifyOtp
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -16,6 +18,8 @@ const router = express.Router();
 router.route('/')
   .get(getUsers);
 
+router.post('/send-otp', sendOtp);
+router.post('/verify-otp', verifyOtp);
 router.post('/login', loginUser);
 router.post('/register', registerUser);
 router.post('/upsert', upsertCustomer);
