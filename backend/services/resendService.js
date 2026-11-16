@@ -45,7 +45,7 @@ export async function sendOtpEmail({ toEmail, otp, name }) {
       <body style="margin: 0; padding: 0; background-color: #FFF8EE; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; -webkit-font-smoothing: antialiased;">
         <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #FFF8EE;">
           <tr>
-            <td align="center" background="https://www.voraeclat.online/email-toys-bg.jpg" style="background-color: #FFF8EE; background-image: url('https://www.voraeclat.online/email-toys-bg.jpg'); background-repeat: no-repeat; background-position: center top; background-size: cover; padding: 36px 12px 46px;">
+            <td align="center" background="https://www.voraeclat.online/email-toys-clean-v2.jpg" style="background-color: #FFF8EE; background-image: url('https://www.voraeclat.online/email-toys-clean-v2.jpg'); background-repeat: no-repeat; background-position: center top; background-size: cover; padding: 36px 12px 46px;">
               
               <!-- Outer Table with Integrated Toys & Scene Decorations -->
               <table role="presentation" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; width: 100%;">
