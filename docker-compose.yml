@@ -1,5 +1,24 @@
 services:
   # -------------------------------------------------------------
+  # Database Service (Self-Hosted MongoDB 7)
+  # -------------------------------------------------------------
+  mongodb:
+    image: mongo:7.0
+    container_name: voraeclat-mongodb
+    restart: unless-stopped
+    command: mongod --wiredTigerCacheSizeGB 0.5
+    volumes:
+      - voraeclat_mongodb_data:/data/db
+      - voraeclat_mongodb_config:/data/configdb
+    networks:
+      - voraeclat-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------------------------------
   # Backend API Service (Node.js / Express / MERN MVC)
   # -------------------------------------------------------------
   backend:
@@ -10,11 +29,14 @@ services:
     restart: unless-stopped
     ports:
       - "${BACKEND_PORT:-5001}:5000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
     environment:
       - NODE_ENV=production
       - PORT=5000
-      - MONGODB_URI=mongodb+srv://mayil:mayil12345@cluster0.yz0ig7h.mongodb.net/voraeclat?retryWrites=true&w=majority&appName=Cluster0
-      - MONGO_URI=mongodb+srv://mayil:mayil12345@cluster0.yz0ig7h.mongodb.net/voraeclat?retryWrites=true&w=majority&appName=Cluster0
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/voraeclat}
+      - MONGO_URI=${MONGO_URI:-mongodb://mongodb:27017/voraeclat}
       - JWT_SECRET=voraeclat_super_secure_jwt_secret_key_2026
       - CLIENT_URL=http://localhost
       - RESEND_API_KEY=${RESEND_API_KEY}
@@ -39,6 +61,10 @@ services:
       - backend
     networks:
       - voraeclat-network
+
+volumes:
+  voraeclat_mongodb_data:
+  voraeclat_mongodb_config:
 
 networks:
   voraeclat-network:
