@@ -189,6 +189,50 @@ export async function fetchBannersFromMongo(): Promise<SiteBanner[] | null> {
   }
 }
 
+/**
+ * Upload and optimize an image on the backend.
+ * Returns the permanent static URL (e.g. '/uploads/banner-1731...webp')
+ * which is 1000x smaller than base64 strings and saves seamlessly to MongoDB and localStorage.
+ */
+export async function uploadImageToBackend(
+  fileOrDataUrl: File | string,
+  target: 'banner' | 'product' | 'hero' = 'banner'
+): Promise<{ url: string; width?: number; height?: number } | null> {
+  try {
+    let dataUrl: string;
+    if (typeof fileOrDataUrl === 'string') {
+      dataUrl = fileOrDataUrl;
+    } else {
+      dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(fileOrDataUrl);
+      });
+    }
+
+    const json = await apiFetch<any>('/api/upload', {
+      method: 'POST',
+      body: JSON.stringify({
+        image: dataUrl,
+        target,
+      }),
+    });
+
+    if (json && json.success && json.url) {
+      return {
+        url: json.url,
+        width: json.width,
+        height: json.height,
+      };
+    }
+    return null;
+  } catch (err) {
+    console.warn('Backend image upload error, using local fallback:', err);
+    return null;
+  }
+}
+
 export async function upsertBannerToMongo(banner: SiteBanner, sortOrder: number = 0): Promise<boolean> {
   try {
     const json = await apiFetch<any>('/api/banners', {

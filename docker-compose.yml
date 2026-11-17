@@ -19,6 +19,8 @@ services:
       - CLIENT_URL=http://localhost
       - RESEND_API_KEY=${RESEND_API_KEY}
       - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-onboarding@resend.dev}
+    volumes:
+      - ./backend/public/uploads:/app/public/uploads
     networks:
       - voraeclat-network
 

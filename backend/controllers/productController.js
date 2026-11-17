@@ -123,15 +123,18 @@ export const getProductById = async (req, res) => {
 export const createProduct = async (req, res) => {
   try {
     if (Array.isArray(req.body)) {
-      if (isDbConnected) {
-        for (const item of req.body) {
+      if (isDbConnected && req.body.length > 0) {
+        const ops = req.body.map((item) => {
           const id = item.customId || item.id;
-          await Product.findOneAndUpdate(
-            { $or: [{ customId: id }, ...(id && id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])] },
-            item,
-            { upsert: true, new: true }
-          );
-        }
+          return {
+            updateOne: {
+              filter: { $or: [{ customId: id }, ...(id && id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])] },
+              update: { $set: { ...item, customId: id } },
+              upsert: true
+            }
+          };
+        });
+        await Product.bulkWrite(ops, { ordered: false });
       }
       inMemoryProducts = req.body;
       return res.status(201).json({ success: true, count: req.body.length });

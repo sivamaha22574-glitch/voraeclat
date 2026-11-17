@@ -75,6 +75,7 @@ import {
   setActiveHeroSlideIndex,
 } from '../../data/siteBanners';
 import { syncHeroSlideUpdate } from '../../data/bannerStorage';
+import { uploadImageToBackend } from '../../lib/mongoApi';
 import { CategoryId } from '../../types';
 
 interface AdDashboardTabProps {
@@ -194,18 +195,20 @@ export const AdDashboardTab: React.FC<AdDashboardTabProps> = ({ onNotify }) => {
   const handleSetPrimaryHeroSlide = (heroId: string, idx: number) => {
     setActiveHeroIndex(idx);
     setActiveHeroSlideIndex(idx, heroId);
-    const updated = siteBanners.map((b) => {
-      if (b.group === 'hero') {
-        return { ...b, isActive: b.id === heroId };
+    setSiteBanners((prevBanners) => {
+      const updated = prevBanners.map((b) => {
+        if (b.group === 'hero') {
+          return { ...b, isActive: b.id === heroId };
+        }
+        return b;
+      });
+      saveStoredSiteBanners(updated);
+      const target = updated.find((b) => b.id === heroId);
+      if (target) {
+        syncHeroSlideUpdate(target);
       }
-      return b;
+      return updated;
     });
-    setSiteBanners(updated);
-    saveStoredSiteBanners(updated);
-    const target = updated.find((b) => b.id === heroId);
-    if (target) {
-      syncHeroSlideUpdate(target);
-    }
     onNotify(`Hero Slide #${idx + 1} locked as the active stable storefront image!`);
   };
 
@@ -548,21 +551,26 @@ export const AdDashboardTab: React.FC<AdDashboardTabProps> = ({ onNotify }) => {
     onNotify(`Banner "${editingBanner.title}" updated and synced to the storefront!`);
   };
 
-  const handleQuickBannerImageUpload = (bannerId: string, file: File) => {
+  const handleQuickBannerImageUpload = async (bannerId: string, file: File) => {
     const target = siteBanners.find((b) => b.id === bannerId);
     const isHero = target?.group === 'hero';
-    compressAndLoadImage(
-      file,
-      (dataUrl, info) => {
-        const ar = info?.width && info?.height ? `${info.width} / ${info.height}` : undefined;
-        const updated = siteBanners.map((b) => {
+
+    onNotify('Uploading and optimizing banner photo... ⏳');
+
+    // 1. Try uploading to backend to get optimized permanent WebP URL
+    const uploadRes = await uploadImageToBackend(file, isHero ? 'hero' : 'banner');
+
+    if (uploadRes && uploadRes.url) {
+      const ar = uploadRes.width && uploadRes.height ? `${uploadRes.width} / ${uploadRes.height}` : undefined;
+      setSiteBanners((prevBanners) => {
+        const updated = prevBanners.map((b) => {
           if (b.id === bannerId) {
             return {
               ...b,
-              imageUrl: dataUrl,
+              imageUrl: uploadRes.url,
               aspectRatio: ar || b.aspectRatio,
-              fitMode: b.fitMode || 'contain',
-              isActive: b.group === 'hero' ? true : b.isActive,
+              fitMode: b.fitMode || (uploadRes.url.includes('shopping') || uploadRes.url.includes('everything') ? 'contain' : 'cover'),
+              isActive: isHero ? true : b.isActive,
             };
           }
           if (isHero && b.group === 'hero') {
@@ -570,19 +578,64 @@ export const AdDashboardTab: React.FC<AdDashboardTabProps> = ({ onNotify }) => {
           }
           return b;
         });
-        setSiteBanners(updated);
+
         saveStoredSiteBanners(updated);
 
         const updatedBanner = updated.find((b) => b.id === bannerId);
-        if (updatedBanner && updatedBanner.group === 'hero') {
+        if (updatedBanner && isHero) {
           syncHeroSlideUpdate(updatedBanner);
-          // Immediately set & lock this uploaded slide as the active storefront hero image
           const heroSlides = updated.filter((b) => b.group === 'hero');
           const slideIdx = heroSlides.findIndex((b) => b.id === bannerId);
           if (slideIdx !== -1) {
-            handleSetPrimaryHeroSlide(bannerId, slideIdx);
+            setActiveHeroIndex(slideIdx);
+            setActiveHeroSlideIndex(slideIdx, bannerId);
           }
         }
+        return updated;
+      });
+
+      onNotify(
+        `Banner photo uploaded & synced live to storefront! (${uploadRes.width || ''}×${uploadRes.height || ''}px WebP) ✅`
+      );
+      return;
+    }
+
+    // 2. Fallback to high-clarity local client compression if backend upload unavailable
+    compressAndLoadImage(
+      file,
+      (dataUrl, info) => {
+        const ar = info?.width && info?.height ? `${info.width} / ${info.height}` : undefined;
+        setSiteBanners((prevBanners) => {
+          const updated = prevBanners.map((b) => {
+            if (b.id === bannerId) {
+              return {
+                ...b,
+                imageUrl: dataUrl,
+                aspectRatio: ar || b.aspectRatio,
+                fitMode: b.fitMode || 'contain',
+                isActive: isHero ? true : b.isActive,
+              };
+            }
+            if (isHero && b.group === 'hero') {
+              return { ...b, isActive: false };
+            }
+            return b;
+          });
+
+          saveStoredSiteBanners(updated);
+
+          const updatedBanner = updated.find((b) => b.id === bannerId);
+          if (updatedBanner && isHero) {
+            syncHeroSlideUpdate(updatedBanner);
+            const heroSlides = updated.filter((b) => b.group === 'hero');
+            const slideIdx = heroSlides.findIndex((b) => b.id === bannerId);
+            if (slideIdx !== -1) {
+              setActiveHeroIndex(slideIdx);
+              setActiveHeroSlideIndex(slideIdx, bannerId);
+            }
+          }
+          return updated;
+        });
 
         onNotify(
           `Hero photo updated & locked as stable storefront image (${info?.width}×${info?.height}px ${info?.format?.replace('image/', '').toUpperCase()})!`

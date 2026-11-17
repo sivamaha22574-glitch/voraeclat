@@ -43,28 +43,41 @@ export const getBanners = async (req, res) => {
 export const createBanner = async (req, res) => {
   try {
     if (Array.isArray(req.body)) {
-      if (isDbConnected) {
-        for (const b of req.body) {
+      if (isDbConnected && req.body.length > 0) {
+        const ops = req.body.map((b) => {
           const id = b.customId || b.id;
-          await Banner.findOneAndUpdate(
-            { $or: [{ customId: id }, ...(id && id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])] },
-            b,
-            { upsert: true, new: true }
-          );
-        }
+          const bannerDoc = {
+            ...b,
+            customId: id,
+            name: b.name || b.title || 'Banner Slide',
+          };
+          return {
+            updateOne: {
+              filter: { $or: [{ customId: id }, ...(id && id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])] },
+              update: { $set: bannerDoc },
+              upsert: true
+            }
+          };
+        });
+        await Banner.bulkWrite(ops, { ordered: false });
       }
       inMemoryBanners = req.body;
       return res.status(201).json({ success: true, count: req.body.length });
     }
 
     const id = req.body.customId || req.body.id;
+    const bannerPayload = {
+      ...req.body,
+      customId: id,
+      name: req.body.name || req.body.title || 'Banner Slide',
+    };
     if (isDbConnected) {
       if (req.body.group === 'hero' && req.body.isActive) {
         await Banner.updateMany({ group: 'hero', customId: { $ne: id } }, { $set: { isActive: false } });
       }
       const banner = await Banner.findOneAndUpdate(
         { $or: [{ customId: id }, ...(id && id.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: id }] : [])] },
-        { ...req.body, customId: id },
+        bannerPayload,
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
       return res.status(201).json({ success: true, data: banner });

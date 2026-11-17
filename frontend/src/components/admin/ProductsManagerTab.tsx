@@ -35,7 +35,7 @@ import { PRODUCTS, getStoredProducts, saveStoredProducts } from '../../data/prod
 import { BOY_FASHION_CATEGORIES } from '../BoyFashionMegaMenu';
 import { GIRL_FASHION_CATEGORIES } from '../GirlFashionMegaMenu';
 import { CURATED_COLLECTIONS } from '../CollectionsMegaMenu';
-import { upsertProductToMongo, deleteProductFromMongo } from '../../lib/mongoApi';
+import { upsertProductToMongo, deleteProductFromMongo, uploadImageToBackend } from '../../lib/mongoApi';
 
 /**
  * Utility: Compresses user-uploaded image to a lightweight JPEG Data URL
@@ -637,8 +637,8 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
   };
 
 
-  // Handle local photo file upload (JPG, PNG, WEBP) with automatic compression
-  const handleImageFileUpload = (
+  // Handle local photo file upload (JPG, PNG, WEBP) with automatic compression & server optimization
+  const handleImageFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     target: 'draft' | 'edit'
   ) => {
@@ -648,6 +648,23 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
       onNotify('Please select a valid photo (JPG, PNG, WEBP)');
       return;
     }
+
+    onNotify('Uploading and optimizing product photo... ⏳');
+
+    // 1. Try uploading to backend to get optimized permanent WebP URL
+    const uploadRes = await uploadImageToBackend(file, 'product');
+    if (uploadRes && uploadRes.url) {
+      if (target === 'draft') {
+        setNewProduct((prev) => ({ ...prev, imageUrl: uploadRes.url }));
+        onNotify('Product photo uploaded successfully! 📷 ✅');
+      } else if (target === 'edit') {
+        setEditingProduct((prev) => (prev ? { ...prev, imageUrl: uploadRes.url } : null));
+        onNotify('Product photo updated successfully! 📷 ✅');
+      }
+      return;
+    }
+
+    // 2. Client fallback
     compressAndLoadImage(file, (dataUrl) => {
       if (target === 'draft') {
         setNewProduct((prev) => ({ ...prev, imageUrl: dataUrl }));
@@ -697,13 +714,27 @@ export const ProductsManagerTab: React.FC<ProductsManagerTabProps> = ({
     setMarkingActiveTab('photos');
   };
 
-  const handleMarkingImageUpload = (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMarkingImageUpload = async (slotIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       onNotify('Please select a valid photo (JPG, PNG, WEBP)');
       return;
     }
+
+    onNotify(`Uploading Frame #${slotIndex + 1} photo... ⏳`);
+
+    const uploadRes = await uploadImageToBackend(file, 'product');
+    if (uploadRes && uploadRes.url) {
+      setMarkingAreaDraft((prev) => {
+        const nextImages = [...prev.galleryImages] as [string, string, string, string];
+        nextImages[slotIndex] = uploadRes.url;
+        return { ...prev, galleryImages: nextImages };
+      });
+      onNotify(`Frame #${slotIndex + 1} photo updated successfully! 📷 ✅`);
+      return;
+    }
+
     compressAndLoadImage(file, (dataUrl) => {
       setMarkingAreaDraft((prev) => {
         const nextImages = [...prev.galleryImages] as [string, string, string, string];

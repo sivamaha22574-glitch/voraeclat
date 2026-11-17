@@ -3406,16 +3406,28 @@ export const getStoredProducts = (): Product[] => {
 export const saveStoredProducts = (products: Product[]): void => {
   try {
     localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(products));
-    
-    // Sync with MongoDB backend API
-    fetch('/api/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(products)
-    }).catch(err => console.warn('Backend MongoDB product sync warning:', err.message));
-  } catch {
-    // ignore
+  } catch (quotaErr) {
+    console.warn('LocalStorage save quota exceeded, saving safe metadata:', quotaErr);
+    try {
+      // Strip any accidental huge base64 strings if localStorage is full
+      const safe = products.map((p) => {
+        if (p.imageUrl && p.imageUrl.startsWith('data:') && p.imageUrl.length > 50000) {
+          return { ...p, imageUrl: '' };
+        }
+        return p;
+      });
+      localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(safe));
+    } catch {
+      // ignore
+    }
   }
+
+  // Sync with MongoDB backend API
+  fetch('/api/products', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(products)
+  }).catch(err => console.warn('Backend MongoDB product sync warning:', err.message));
 };
 
 
