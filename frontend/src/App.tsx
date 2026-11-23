@@ -277,6 +277,33 @@ export default function App() {
 
   // Sync with live MongoDB Atlas database on mount: Products, Orders, Coupons
   useEffect(() => {
+    // Proactively purge any legacy dummy customer from localStorage
+    try {
+      const rawUser = localStorage.getItem('voraeclat_customer_user') || localStorage.getItem('puppy_shame_customer_user');
+      if (rawUser) {
+        const u = JSON.parse(rawUser);
+        if (
+          !u ||
+          !u.name ||
+          u.name === 'Customer' ||
+          u.name === 'Test Buyer' ||
+          u.name === 'Pooja Verma' ||
+          /^test/i.test(u.name) ||
+          u.mobile === '+91 98201 23456' ||
+          u.mobile === '9876543210' ||
+          u.mobile === '+91 9876543210' ||
+          u.mobile === '+91 9999999999' ||
+          (u.address && u.address.includes('Green Park Avenue'))
+        ) {
+          localStorage.removeItem('voraeclat_customer_user');
+          localStorage.removeItem('puppy_shame_customer_user');
+          setCustomer(null);
+        }
+      }
+    } catch {
+      // ignore
+    }
+
     // 1. Fetch live product catalog from MongoDB Atlas
     fetchProductsFromMongo().then((remoteProducts) => {
       if (remoteProducts && remoteProducts.length > 0) {

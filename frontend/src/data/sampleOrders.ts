@@ -32,8 +32,23 @@ export const getStoredCustomer = (): CustomerUser | null => {
     const raw = localStorage.getItem(STORAGE_KEY_CUSTOMER) || localStorage.getItem(LEGACY_STORAGE_KEY_CUSTOMER);
     if (raw) {
       const user = JSON.parse(raw);
-      // If customer is the old mock Pooja Verma, don't return it
-      if (user?.mobile === '+91 98201 23456' || user?.mobile === '+91 9820123456' || user?.name === 'Pooja Verma') {
+      // If customer is a dummy or test placeholder, wipe from storage and return null
+      const isDummy =
+        !user ||
+        !user.name ||
+        user.name === 'Customer' ||
+        user.name === 'Test Buyer' ||
+        user.name === 'Pooja Verma' ||
+        /^test/i.test(user.name) ||
+        user.mobile === '+91 98201 23456' ||
+        user.mobile === '+91 9820123456' ||
+        user.mobile === '9876543210' ||
+        user.mobile === '+91 9876543210' ||
+        user.mobile === '+91 9999999999' ||
+        user.mobile === '9999999999' ||
+        (user.address && user.address.includes('Green Park Avenue'));
+
+      if (isDummy) {
         localStorage.removeItem(STORAGE_KEY_CUSTOMER);
         localStorage.removeItem(LEGACY_STORAGE_KEY_CUSTOMER);
         return null;
