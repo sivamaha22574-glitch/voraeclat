@@ -10,6 +10,12 @@ let inMemoryOrders = [];
 // @access  Public
 export const createOrder = async (req, res) => {
   try {
+    // Block fake/duplicate test orders from legacy clients
+    const incomingId = (req.body.orderId || '').toString();
+    if (incomingId.startsWith('ORD-2852') || incomingId.startsWith('PS-TEST') || incomingId.startsWith('PS-7842')) {
+      return res.status(200).json({ success: true, message: 'Ignored duplicate test order' });
+    }
+
     const {
       customerMobile,
       customerName,
@@ -290,7 +296,9 @@ export const getAllOrders = async (req, res) => {
 
     if (isDbConnected) {
       try {
-        const filter = {};
+        const filter = {
+          orderId: { $not: /^ORD-2852/ }
+        };
         if (status && status !== 'all') filter.status = status;
         if (courierPartner && courierPartner !== 'all') filter.courierPartner = courierPartner;
         if (paymentMode && paymentMode !== 'all') filter.paymentMode = paymentMode;
