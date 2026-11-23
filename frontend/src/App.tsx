@@ -171,7 +171,7 @@ export default function App() {
   const [minRating, setMinRating] = useState<number>(0);
   const [sortBy, setSortBy] = useState<'popular' | 'price-low' | 'price-high' | 'rating' | 'discount'>('popular');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [deliveryPincode, setDeliveryPincode] = useState<string>('400001');
+  const [deliveryPincode, setDeliveryPincode] = useState<string>('');
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [isDesktopFiltersOpen, setIsDesktopFiltersOpen] = useState(true);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);

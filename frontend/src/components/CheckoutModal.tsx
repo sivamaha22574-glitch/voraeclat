@@ -53,31 +53,95 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [lastPlacedOrder, setLastPlacedOrder] = useState<CustomerOrder | null>(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
-  // Form State with user or sensible defaults
-  const [fullName, setFullName] = useState(customer?.name || 'Customer');
-  const [phone, setPhone] = useState(customer?.mobile ? customer.mobile.replace('+91 ', '') : '9876543210');
-  const [email, setEmail] = useState(customer?.email || 'customer@voraeclat.com');
-  const [address, setAddress] = useState(customer?.address || '102, Green Park Avenue');
-  const [city, setCity] = useState(customer?.city || 'Mumbai');
-  const [pincode, setPincode] = useState(deliveryPincode || customer?.pincode || '400001');
+  // Form State - clean & empty for all customers
+  const [fullName, setFullName] = useState(
+    customer?.name && !/^customer$/i.test(customer.name.trim()) && !/^test/i.test(customer.name.trim())
+      ? customer.name.trim()
+      : ''
+  );
+  const [phone, setPhone] = useState(
+    customer?.mobile && !customer.mobile.includes('9876543210') && !customer.mobile.includes('9999999999')
+      ? customer.mobile.replace('+91', '').trim()
+      : ''
+  );
+  const [email, setEmail] = useState(
+    customer?.email && !customer.email.includes('example.com') && customer.email !== 'customer@voraeclat.com' && !/^test/i.test(customer.email)
+      ? customer.email.trim()
+      : ''
+  );
+  const [address, setAddress] = useState(
+    customer?.address && !customer.address.includes('Green Park Avenue')
+      ? customer.address.trim()
+      : ''
+  );
+  const [city, setCity] = useState(
+    customer?.city && customer.city !== 'Mumbai'
+      ? customer.city.trim()
+      : ''
+  );
+  const [pincode, setPincode] = useState(
+    customer?.pincode && customer.pincode !== '400001'
+      ? customer.pincode.trim()
+      : deliveryPincode && deliveryPincode !== '400001'
+      ? deliveryPincode.trim()
+      : ''
+  );
   const [deliverySpeed, setDeliverySpeed] = useState<'standard' | 'express'>('standard');
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'upi' | 'card' | 'netbanking'>('cod');
   const [selectedBank, setSelectedBank] = useState<string>('HDFC Bank');
-  const [upiId, setUpiId] = useState('user@okhdfcbank');
-  const [cardNumber, setCardNumber] = useState('4532 •••• •••• 8821');
-  const [cardExp, setCardExp] = useState('08/29');
-  const [cardCvv, setCardCvv] = useState('742');
+  const [upiId, setUpiId] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExp, setCardExp] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
 
   useEffect(() => {
-    if (customer) {
-      if (customer.name) setFullName(customer.name);
-      if (customer.mobile) setPhone(customer.mobile.replace('+91 ', ''));
-      if (customer.email) setEmail(customer.email);
-      if (customer.address) setAddress(customer.address);
-      if (customer.city) setCity(customer.city);
-      if (customer.pincode) setPincode(customer.pincode);
+    if (isOpen) {
+      setIsConfirmed(false);
+      setOrderNumber('');
+      setSubmitError(null);
+      if (customer) {
+        if (customer.name && !/^customer$/i.test(customer.name.trim()) && !/^test/i.test(customer.name.trim())) {
+          setFullName(customer.name.trim());
+        } else {
+          setFullName('');
+        }
+        if (customer.mobile && !customer.mobile.includes('9876543210') && !customer.mobile.includes('9999999999')) {
+          setPhone(customer.mobile.replace('+91', '').trim());
+        } else {
+          setPhone('');
+        }
+        if (customer.email && !customer.email.includes('example.com') && customer.email !== 'customer@voraeclat.com' && !/^test/i.test(customer.email)) {
+          setEmail(customer.email.trim());
+        } else {
+          setEmail('');
+        }
+        if (customer.address && !customer.address.includes('Green Park Avenue')) {
+          setAddress(customer.address.trim());
+        } else {
+          setAddress('');
+        }
+        if (customer.city && customer.city !== 'Mumbai') {
+          setCity(customer.city.trim());
+        } else {
+          setCity('');
+        }
+        if (customer.pincode && customer.pincode !== '400001') {
+          setPincode(customer.pincode.trim());
+        } else if (deliveryPincode && deliveryPincode !== '400001') {
+          setPincode(deliveryPincode.trim());
+        } else {
+          setPincode('');
+        }
+      } else {
+        setFullName('');
+        setPhone('');
+        setEmail('');
+        setAddress('');
+        setCity('');
+        setPincode(deliveryPincode && deliveryPincode !== '400001' ? deliveryPincode.trim() : '');
+      }
     }
-  }, [customer]);
+  }, [isOpen, customer, deliveryPincode]);
 
   if (!isOpen) return null;
 
@@ -346,6 +410,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <label className="block text-[11px] font-bold text-slate-700 mb-1">Card Number (Visa / Mastercard / RuPay)</label>
                       <input
                         type="text"
+                        placeholder="16-digit card number"
                         value={cardNumber}
                         onChange={(e) => setCardNumber(e.target.value)}
                         className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg font-mono outline-hidden focus:bg-white"
@@ -356,6 +421,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Expiry Date</label>
                         <input
                           type="text"
+                          placeholder="MM/YY"
                           value={cardExp}
                           onChange={(e) => setCardExp(e.target.value)}
                           className="w-full px-3 py-1 text-xs bg-slate-50 border border-slate-300 rounded-lg font-mono outline-hidden"
@@ -365,6 +431,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         <label className="block text-[10px] font-bold text-slate-700 mb-0.5">CVV</label>
                         <input
                           type="password"
+                          placeholder="CVV"
                           value={cardCvv}
                           onChange={(e) => setCardCvv(e.target.value)}
                           className="w-full px-3 py-1 text-xs bg-slate-50 border border-slate-300 rounded-lg font-mono outline-hidden"

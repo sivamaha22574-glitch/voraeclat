@@ -359,7 +359,7 @@ export const Header: React.FC<HeaderProps> = ({
               title="Change Delivery Location"
             >
               <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-              <span className="text-[11px] text-slate-500">Deliver to: <strong className="text-slate-900 font-semibold">{deliveryPincode}</strong></span>
+              <span className="text-[11px] text-slate-500">Deliver to: <strong className="text-slate-900 font-semibold">{deliveryPincode || 'Select PIN'}</strong></span>
               <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
             </button>
           </div>
