@@ -1418,7 +1418,7 @@ export default function App() {
             />
           )}
 
-          {/* Prominent Category & Subcategory Header (Style matching HAY! reference) */}
+          {/* Prominent Category & Subcategory Header */}
           <div className="text-center py-4 sm:py-6 space-y-1">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight capitalize">
               {selectedSubCategory
@@ -1432,7 +1432,7 @@ export default function App() {
             </p>
           </div>
 
-          {/* Controls Bar replicating hayclothing.in screenshot */}
+          {/* Controls Bar */}
           <div className="border-t border-b border-slate-200 py-3 mb-6 space-y-3 bg-white/70 backdrop-blur-xs rounded-2xl px-4 sm:px-6 shadow-2xs">
             {/* Top row: [ FILTER ] button, SORT BY, and [2 | 3 | 4] Grid View switcher */}
             <div className="flex flex-wrap items-center justify-between gap-3">

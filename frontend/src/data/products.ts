@@ -35,7 +35,7 @@ export const PRODUCTS: Product[] = [
   {
     id: 'ps-sunflower-dress',
     name: 'Sunflower Sapphire Floral Shirt Collar A-Line Dress',
-    brand: 'HAY! Contemporary Ethnic',
+    brand: 'Voraeclat Contemporary Ethnic',
     categoryId: 'moms-maternity',
     categoryName: "Mom's & Maternity",
     subCategory: 'Dresses & Kurtas',

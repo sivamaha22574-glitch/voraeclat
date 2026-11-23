@@ -161,7 +161,7 @@ export const INITIAL_SITE_BANNERS: SiteBanner[] = [
     badge: '★ TRENDING SPOTLIGHT',
     title: 'Sunflower Sapphire Floral Shirt Collar A-Line Dress',
     underText:
-      'Pure Viscose fabric with statement sunflower placement print, classic shirt collar, 3/4th sleeves, and signature HAY! Gift Box option. Click to open the complete 2-column lookbook.',
+      'Pure Viscose fabric with statement sunflower placement print, classic shirt collar, 3/4th sleeves, and signature Gift Box option. Click to open the complete 2-column lookbook.',
     imageUrl:
       'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=2000&q=92',
     buttonText: 'View Product Detail & Gallery →',

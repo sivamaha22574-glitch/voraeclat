@@ -90,11 +90,57 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
   const handleAddToCartClick = () => {
     onAddToCart(product, selectedSize, selectedColor);
+    if (addGiftBox) {
+      const giftBoxProduct: Product = {
+        id: 'gift-box-signature',
+        name: 'Voraeclat Signature Gift Box 🎁',
+        price: 399,
+        originalPrice: 499,
+        discountPercent: 20,
+        clubPrice: 349,
+        category: 'accessories',
+        categoryId: 'accessories',
+        categoryName: 'Gift Boxes & Sets',
+        subCategory: 'Gift Box',
+        imageUrl: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=400&q=80',
+        images: ['https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=400&q=80'],
+        sizes: ['Standard'],
+        colors: [{ name: 'Royal Rose & Gold', hex: '#BE185D' }],
+        rating: 5.0,
+        reviewsCount: 128,
+        inStock: true,
+        description: 'Make your order extra special with our signature gift box.',
+      };
+      onAddToCart(giftBoxProduct, 'Standard', { name: 'Royal Rose & Gold', hex: '#BE185D' });
+    }
     setAddedNotice(true);
     setTimeout(() => setAddedNotice(false), 2200);
   };
 
   const handleBuyNowClick = () => {
+    if (addGiftBox) {
+      const giftBoxProduct: Product = {
+        id: 'gift-box-signature',
+        name: 'Voraeclat Signature Gift Box 🎁',
+        price: 399,
+        originalPrice: 499,
+        discountPercent: 20,
+        clubPrice: 349,
+        category: 'accessories',
+        categoryId: 'accessories',
+        categoryName: 'Gift Boxes & Sets',
+        subCategory: 'Gift Box',
+        imageUrl: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=400&q=80',
+        images: ['https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=400&q=80'],
+        sizes: ['Standard'],
+        colors: [{ name: 'Royal Rose & Gold', hex: '#BE185D' }],
+        rating: 5.0,
+        reviewsCount: 128,
+        inStock: true,
+        description: 'Make your order extra special with our signature gift box.',
+      };
+      onAddToCart(giftBoxProduct, 'Standard', { name: 'Royal Rose & Gold', hex: '#BE185D' });
+    }
     if (onBuyNow) {
       onBuyNow(product, selectedSize, selectedColor);
     } else {
@@ -426,7 +472,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 </div>
               </div>
 
-              {/* Add a HAY! Gift Box Box (Matching screenshot) */}
+              {/* Add a Gift Box (Matching screenshot) */}
               <div className="border border-pink-200 bg-[#fffbfc] rounded-xl p-3.5 mb-5 flex items-center justify-between gap-3">
                 <div className="flex items-start gap-2.5">
                   <input
@@ -438,7 +484,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   />
                   <label htmlFor="gift-box" className="cursor-pointer">
                     <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
-                      <span>Add a HAY! Gift Box</span>
+                      <span>Add a Gift Box</span>
                       <span>🎁</span>
                     </div>
                     <div className="text-[11px] text-slate-500 leading-tight mt-0.5">

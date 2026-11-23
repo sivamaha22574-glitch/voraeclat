@@ -68,10 +68,10 @@ export const MobileMenuDrawer: React.FC<MobileMenuDrawerProps> = ({
         <div className="p-4 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="font-serif text-2xl font-black tracking-tight text-amber-300">
-              HAY!
+              Voraeclat
             </span>
             <span className="text-[11px] font-semibold text-slate-300">
-              &bull; Voraeclat
+              Kids &amp; Family
             </span>
           </div>
           <button
