@@ -28,6 +28,7 @@ import {
   saveStoredCustomer,
   getStoredOrders,
   appendCustomerOrder,
+  FAKE_SAMPLE_ORDER_IDS,
 } from './data/sampleOrders';
 import { Footer } from './components/Footer';
 import { FilterSidebar, FilterValues } from './components/FilterSidebar';
@@ -289,7 +290,11 @@ export default function App() {
       if (remoteOrders && remoteOrders.length > 0) {
         // Filter out fake or duplicate orders
         const cleanOrders = remoteOrders.filter((o) => {
-          const isFake = !o.orderId || o.orderId.startsWith('ORD-2852') || o.deliveryAddress?.phone === '+91 9999999999';
+          const isFake =
+            !o.orderId ||
+            FAKE_SAMPLE_ORDER_IDS.has(o.orderId) ||
+            o.orderId.startsWith('ORD-2852') ||
+            o.deliveryAddress?.phone === '+91 9999999999';
           return !isFake;
         });
         setCustomerOrders(cleanOrders);

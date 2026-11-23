@@ -5,6 +5,16 @@ import { isDbConnected } from '../config/db.js';
 
 let inMemoryOrders = [];
 
+const BLACKLISTED_DUMMY_IDS = [
+  'ORD-910482',
+  'ORD-739105',
+  'VOR-215408',
+  'VOR-601823',
+  'VOR-636558',
+  'VOR-999888',
+  'VOR-575977'
+];
+
 // @desc    Create new order with full billing, customer, ad, and courier data
 // @route   POST /api/orders
 // @access  Public
@@ -12,7 +22,12 @@ export const createOrder = async (req, res) => {
   try {
     // Block fake/duplicate test orders from legacy clients
     const incomingId = (req.body.orderId || '').toString();
-    if (incomingId.startsWith('ORD-2852') || incomingId.startsWith('PS-TEST') || incomingId.startsWith('PS-7842')) {
+    if (
+      BLACKLISTED_DUMMY_IDS.includes(incomingId) ||
+      incomingId.startsWith('ORD-2852') ||
+      incomingId.startsWith('PS-') ||
+      incomingId.toLowerCase().includes('test')
+    ) {
       return res.status(200).json({ success: true, message: 'Ignored duplicate test order' });
     }
 
@@ -287,6 +302,7 @@ export const getCustomerOrders = async (req, res) => {
     if (isDbConnected) {
       try {
         const orders = await Order.find({
+          orderId: { $nin: BLACKLISTED_DUMMY_IDS, $not: /^ORD-2852|^PS-|^TEST/i },
           $or: [
             { customerMobile: identifier },
             { customerEmail: identifier }
@@ -319,7 +335,7 @@ export const getAllOrders = async (req, res) => {
     if (isDbConnected) {
       try {
         const filter = {
-          orderId: { $not: /^ORD-2852/ }
+          orderId: { $nin: BLACKLISTED_DUMMY_IDS, $not: /^ORD-2852|^PS-|^TEST/i }
         };
         if (status && status !== 'all') filter.status = status;
         if (courierPartner && courierPartner !== 'all') filter.courierPartner = courierPartner;
