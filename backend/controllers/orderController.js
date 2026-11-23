@@ -213,6 +213,28 @@ export const createOrder = async (req, res) => {
   }
 };
 
+// @desc    Delete order by ID
+// @route   DELETE /api/orders/:id
+// @access  Public / Admin
+export const deleteOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (isDbConnected) {
+      const isValidObjectId = mongoose.Types.ObjectId.isValid(id) && id.length === 24;
+      await Order.deleteOne({
+        $or: [
+          { orderId: id },
+          ...(isValidObjectId ? [{ _id: new mongoose.Types.ObjectId(id) }] : [])
+        ]
+      });
+    }
+    inMemoryOrders = inMemoryOrders.filter(o => o.orderId !== id && o._id?.toString() !== id);
+    res.json({ success: true, message: 'Order deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Get order by orderId, invoiceNumber, trackingNumber, or AWB
 // @route   GET /api/orders/:id
 // @access  Public

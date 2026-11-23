@@ -27,19 +27,67 @@ export const StoreOverviewTab: React.FC<StoreOverviewTabProps> = ({
   onNavigateTab,
   onOpenStore,
 }) => {
-  const calculatedTotalRevenue = orders.reduce((acc, o) => acc + o.totalAmount, 0) + 1250000;
+  const calculatedTotalRevenue = orders.reduce((acc, o) => acc + (o.totalAmount || 0), 0);
+  const totalOrdersCount = orders.length;
+  const aov = totalOrdersCount > 0 ? Math.round(calculatedTotalRevenue / totalOrdersCount) : 0;
+  const uniqueCustomersCount = new Set(
+    orders
+      .map((o) => (o.deliveryAddress?.phone || (o as any).customerMobile || '').replace(/\D/g, '').slice(-10))
+      .filter(Boolean)
+  ).size;
   const recentOrders = orders.slice(0, 4);
 
-  const monthlyRevenueData = [
-    { month: 'May', amount: 8.4, orders: 420 },
-    { month: 'Jun', amount: 9.8, orders: 510 },
-    { month: 'Jul', amount: 11.2, orders: 620 },
-    { month: 'Aug', amount: 13.5, orders: 740 },
-    { month: 'Sep', amount: 16.8, orders: 890 },
-    { month: 'Oct', amount: 21.4, orders: 1140 },
-  ];
+  // Dynamic monthly revenue aggregation for past 6 months from real orders
+  const now = new Date();
+  const monthlyRevenueData = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthName = d.toLocaleString('en-US', { month: 'short' });
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    const monthOrders = orders.filter((o) => {
+      const dateVal = o.date || (o as any).createdAt;
+      const od = dateVal ? new Date(dateVal) : null;
+      return od && !isNaN(od.getTime()) && od.getFullYear() === y && od.getMonth() === m;
+    });
+    const sum = monthOrders.reduce((acc, o) => acc + (o.totalAmount || 0), 0);
+    monthlyRevenueData.push({
+      month: monthName,
+      amount: sum,
+      orders: monthOrders.length,
+    });
+  }
 
-  const maxAmount = Math.max(...monthlyRevenueData.map((d) => d.amount));
+  const maxAmount = Math.max(...monthlyRevenueData.map((d) => d.amount), 1);
+
+  // Dynamic department breakdown from actual ordered items
+  const allOrderedItems = orders.flatMap((o) => o.items || []);
+  const deptCounts: Record<string, { count: number; revenue: number }> = {};
+  allOrderedItems.forEach((item) => {
+    const name = (item.productName || '').toLowerCase();
+    let category = 'Girl Dresses';
+    if (name.includes('boy') || name.includes('kurta') || name.includes('suit') || name.includes('sherwani')) {
+      category = 'Boy Kurta & Suits';
+    } else if (name.includes('festive') || name.includes('lehenga') || name.includes('anarkali') || name.includes('ethnic')) {
+      category = 'Festive Ethnic';
+    } else if (name.includes('baby') || name.includes('romper') || name.includes('infant') || name.includes('newborn')) {
+      category = 'Baby Essentials';
+    } else if (name.includes('girl') || name.includes('frock') || name.includes('gown')) {
+      category = 'Girl Dresses';
+    } else {
+      category = 'Festive Ethnic';
+    }
+    if (!deptCounts[category]) deptCounts[category] = { count: 0, revenue: 0 };
+    deptCounts[category].count += item.quantity || 1;
+    deptCounts[category].revenue += (item.price || 0) * (item.quantity || 1);
+  });
+  const totalItemRev = Object.values(deptCounts).reduce((acc, v) => acc + v.revenue, 0) || 1;
+  const depts = [
+    { name: 'Girl Dresses', data: deptCounts['Girl Dresses'] || { count: 0, revenue: 0 } },
+    { name: 'Boy Kurta & Suits', data: deptCounts['Boy Kurta & Suits'] || { count: 0, revenue: 0 } },
+    { name: 'Festive Ethnic', data: deptCounts['Festive Ethnic'] || { count: 0, revenue: 0 } },
+    { name: 'Baby Essentials', data: deptCounts['Baby Essentials'] || { count: 0, revenue: 0 } },
+  ];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
@@ -85,11 +133,13 @@ export const StoreOverviewTab: React.FC<StoreOverviewTabProps> = ({
             </div>
           </div>
           <div className="text-2xl font-black text-slate-900">
-            ₹{(calculatedTotalRevenue / 100000).toFixed(2)} Lakhs
+            {calculatedTotalRevenue >= 100000
+              ? `₹${(calculatedTotalRevenue / 100000).toFixed(2)} Lakhs`
+              : `₹${calculatedTotalRevenue.toLocaleString('en-IN')}`}
           </div>
           <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-bold">
             <TrendingUp className="w-3.5 h-3.5" />
-            <span>+24.8% YoY growth</span>
+            <span>Live Real-time Total</span>
           </div>
         </div>
 
@@ -101,10 +151,10 @@ export const StoreOverviewTab: React.FC<StoreOverviewTabProps> = ({
               <ShoppingBag className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-slate-900">1,842</div>
+          <div className="text-2xl font-black text-slate-900">{totalOrdersCount}</div>
           <div className="flex items-center gap-1 text-[11px] text-blue-600 font-bold">
             <ArrowUpRight className="w-3.5 h-3.5" />
-            <span>+14.2% order velocity</span>
+            <span>Verified Orders</span>
           </div>
         </div>
 
@@ -116,8 +166,8 @@ export const StoreOverviewTab: React.FC<StoreOverviewTabProps> = ({
               <Package className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-slate-900">₹2,140</div>
-          <div className="text-[11px] text-slate-500 font-medium">Boosted by Voraeclat Club 2-item sets</div>
+          <div className="text-2xl font-black text-slate-900">₹{aov.toLocaleString('en-IN')}</div>
+          <div className="text-[11px] text-slate-500 font-medium">Average transaction value</div>
         </div>
 
         {/* Metric 4 */}
@@ -128,8 +178,8 @@ export const StoreOverviewTab: React.FC<StoreOverviewTabProps> = ({
               <Crown className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-slate-900">482 Parents</div>
-          <div className="text-[11px] text-amber-700 font-bold">68% repeat purchase rate</div>
+          <div className="text-2xl font-black text-slate-900">{uniqueCustomersCount} Customers</div>
+          <div className="text-[11px] text-amber-700 font-bold">Unique buyer profiles</div>
         </div>
       </div>
 
@@ -140,11 +190,11 @@ export const StoreOverviewTab: React.FC<StoreOverviewTabProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base font-extrabold text-slate-900">Monthly Revenue Growth</h3>
-              <p className="text-xs text-slate-500">Values in ₹ Lakhs &bull; Last 6 billing cycles</p>
+              <p className="text-xs text-slate-500">Live order aggregation &bull; Last 6 billing cycles</p>
             </div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[11px] font-bold">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Trending Record High</span>
+              <span>Real-time Data</span>
             </div>
           </div>
 
@@ -152,18 +202,18 @@ export const StoreOverviewTab: React.FC<StoreOverviewTabProps> = ({
           <div className="pt-4">
             <div className="flex items-end justify-between gap-3 h-52 border-b border-slate-100 pb-2">
               {monthlyRevenueData.map((d) => {
-                const heightPercent = (d.amount / maxAmount) * 100;
+                const heightPercent = maxAmount > 0 ? (d.amount / maxAmount) * 100 : 0;
                 return (
                   <div key={d.month} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">
-                      ₹{d.amount}L
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm whitespace-nowrap">
+                      ₹{d.amount.toLocaleString('en-IN')} ({d.orders} orders)
                     </div>
                     <div
-                      style={{ height: `${heightPercent}%` }}
+                      style={{ height: `${Math.max(heightPercent, 4)}%` }}
                       className={`w-full max-w-[42px] rounded-t-xl transition-all duration-500 ${
-                        d.month === 'Oct'
+                        d.amount > 0
                           ? 'bg-linear-to-t from-amber-500 to-amber-400 group-hover:from-amber-600 group-hover:to-amber-500 shadow-md'
-                          : 'bg-linear-to-t from-slate-200 to-slate-300 group-hover:from-indigo-400 group-hover:to-indigo-500'
+                          : 'bg-linear-to-t from-slate-200 to-slate-200'
                       }`}
                     />
                     <span className="text-[11px] font-bold text-slate-600">{d.month}</span>
@@ -179,22 +229,17 @@ export const StoreOverviewTab: React.FC<StoreOverviewTabProps> = ({
               Revenue Breakdown by Department
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                <div className="text-slate-500 text-[11px]">Girl Dresses</div>
-                <div className="font-black text-slate-900 text-sm">34% (₹7.2L)</div>
-              </div>
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                <div className="text-slate-500 text-[11px]">Boy Kurta & Suits</div>
-                <div className="font-black text-slate-900 text-sm">28% (₹6.0L)</div>
-              </div>
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                <div className="text-slate-500 text-[11px]">Festive Ethnic</div>
-                <div className="font-black text-slate-900 text-sm">24% (₹5.1L)</div>
-              </div>
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                <div className="text-slate-500 text-[11px]">Baby Essentials</div>
-                <div className="font-black text-slate-900 text-sm">14% (₹3.1L)</div>
-              </div>
+              {depts.map((dp) => {
+                const pct = totalItemRev > 0 ? Math.round((dp.data.revenue / totalItemRev) * 100) : 0;
+                return (
+                  <div key={dp.name} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="text-slate-500 text-[11px] truncate">{dp.name}</div>
+                    <div className="font-black text-slate-900 text-sm">
+                      {pct}% (₹{dp.data.revenue.toLocaleString('en-IN')})
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

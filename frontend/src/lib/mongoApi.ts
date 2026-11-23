@@ -751,6 +751,17 @@ export async function updateOrderStatusInMongo(
   }
 }
 
+export async function deleteOrderFromMongo(orderId: string): Promise<boolean> {
+  try {
+    const json = await apiFetch<any>(`/api/orders/${orderId}`, {
+      method: 'DELETE',
+    });
+    return Boolean(json && json.success);
+  } catch {
+    return false;
+  }
+}
+
 // ==========================================
 // 6. MEDIA UPLOAD (Data URL / MongoDB Storage)
 // ==========================================

@@ -18,10 +18,11 @@ import {
   Send,
   UserCheck,
   Megaphone,
-  RotateCcw
+  RotateCcw,
+  Trash2
 } from 'lucide-react';
 import { CustomerOrder, OrderStatus, CourierPartner, PaymentMode, DeliveryPendingReason } from '../../types';
-import { updateOrderStatusInMongo, fetchOrdersFromMongo } from '../../lib/mongoApi';
+import { updateOrderStatusInMongo, fetchOrdersFromMongo, deleteOrderFromMongo } from '../../lib/mongoApi';
 import { TaxInvoiceModal } from '../TaxInvoiceModal';
 
 interface OrdersManagerTabProps {
@@ -135,6 +136,22 @@ export const OrdersManagerTab: React.FC<OrdersManagerTabProps> = ({
     }
 
     onNotify(`Order #${orderId} marked as ${newStatus}`);
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete order ${orderId}? This cannot be undone.`)) {
+      return;
+    }
+    const ok = await deleteOrderFromMongo(orderId);
+    if (ok) {
+      onUpdateOrders(orders.filter((o) => o.orderId !== orderId));
+      if (selectedOrder && selectedOrder.orderId === orderId) {
+        setSelectedOrder(null);
+      }
+      onNotify(`Order ${orderId} removed permanently.`);
+    } else {
+      onNotify(`Failed to delete order ${orderId}.`);
+    }
   };
 
   const handleCourierChange = (orderId: string, courier: CourierPartner) => {
@@ -440,15 +457,27 @@ export const OrdersManagerTab: React.FC<OrdersManagerTabProps> = ({
 
                     {/* Actions */}
                     <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedOrder(order);
-                        }}
-                        className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition-colors cursor-pointer"
-                      >
-                        Inspect
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedOrder(order);
+                          }}
+                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs transition-colors cursor-pointer"
+                        >
+                          Inspect
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteOrder(order.orderId);
+                          }}
+                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Delete Order"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

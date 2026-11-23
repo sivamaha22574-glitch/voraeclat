@@ -18,6 +18,13 @@ const FAKE_SAMPLE_ORDER_IDS = new Set([
   'ORD-285274-911',
   'ORD-285281-989',
   'ORD-285294-406',
+  'ORD-910482',
+  'ORD-739105',
+  'VOR-215408',
+  'VOR-601823',
+  'VOR-636558',
+  'VOR-999888',
+  'VOR-575977'
 ]);
 
 export const getStoredCustomer = (): CustomerUser | null => {
