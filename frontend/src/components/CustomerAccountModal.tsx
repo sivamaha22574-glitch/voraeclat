@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   X,
   Package,
@@ -73,7 +73,34 @@ export const CustomerAccountModal: React.FC<CustomerAccountModalProps> = ({
 
   if (!isOpen || !customer) return null;
 
-  const filteredOrders = orders.filter((o) => {
+  // 1. De-duplicate orders by orderId so duplicate records never appear
+  const uniqueOrders = useMemo(() => {
+    const map = new Map<string, CustomerOrder>();
+    orders.forEach((o) => {
+      if (o.orderId && !map.has(o.orderId)) {
+        map.set(o.orderId, o);
+      }
+    });
+    return Array.from(map.values());
+  }, [orders]);
+
+  // 2. Filter orders to strictly show orders belonging to this customer
+  const customerOrdersList = useMemo(() => {
+    if (!customer) return [];
+    const custPhone = (customer.mobile || '').replace(/\D/g, '').slice(-10);
+    const custEmail = (customer.email || '').trim().toLowerCase();
+
+    return uniqueOrders.filter((o) => {
+      const orderPhone = (o.deliveryAddress?.phone || (o as any).customerMobile || '').replace(/\D/g, '').slice(-10);
+      const orderEmail = ((o as any).customerEmail || '').trim().toLowerCase();
+
+      const phoneMatch = custPhone && orderPhone && custPhone === orderPhone;
+      const emailMatch = custEmail && orderEmail && custEmail === orderEmail;
+      return phoneMatch || emailMatch;
+    });
+  }, [uniqueOrders, customer]);
+
+  const filteredOrders = customerOrdersList.filter((o) => {
     if (orderFilter === 'active') return o.status !== 'Delivered' && o.status !== 'Cancelled';
     if (orderFilter === 'delivered') return o.status === 'Delivered';
     return true;
@@ -237,7 +264,7 @@ export const CustomerAccountModal: React.FC<CustomerAccountModalProps> = ({
             <Package className="w-4 h-4 text-amber-600" />
             <span>My Orders & History</span>
             <span className="ml-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-xs font-black">
-              {orders.length}
+              {customerOrdersList.length}
             </span>
           </button>
 
@@ -290,7 +317,7 @@ export const CustomerAccountModal: React.FC<CustomerAccountModalProps> = ({
                       }`}
                     >
                       {filterKey === 'all'
-                        ? `All (${orders.length})`
+                        ? `All (${customerOrdersList.length})`
                         : filterKey === 'active'
                         ? 'Active / In Transit'
                         : 'Delivered'}

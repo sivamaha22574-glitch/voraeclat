@@ -17,7 +17,12 @@ const getResendClient = () => {
  * Send 4-digit verification OTP via Resend email service matching the exact customer brand design with toys & illustrated background
  */
 export async function sendOtpEmail({ toEmail, otp, name }) {
-  const recipientName = name || 'Saravanan';
+  // Sanitize customer name: remove test/test11 placeholders and format real customer name
+  let cleanRecipient = (name || '').trim();
+  if (!cleanRecipient || /^test(\d+)?$/i.test(cleanRecipient) || /^test\s*buyer$/i.test(cleanRecipient)) {
+    cleanRecipient = 'Customer';
+  }
+  const recipientName = cleanRecipient;
   const cleanToEmail = toEmail.trim().toLowerCase();
   const resend = getResendClient();
 

@@ -76,15 +76,18 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
       // Check if this real customer already exists in MongoDB Atlas by either email or mobile
       const existing = await fetchCustomerByEmailOrPhone(cleanEmail, formattedPhone);
       setExistingUserFound(existing);
-      if (existing?.name) {
-        setCustomerName(existing.name);
+      const isRealName = existing?.name && !/^test(\d+)?$/i.test(existing.name.trim()) && !/^test\s*buyer$/i.test(existing.name.trim());
+      if (isRealName) {
+        setCustomerName(existing.name.trim());
+      } else {
+        setCustomerName('');
       }
       if (existing?.city) {
         setCustomerCity(existing.city);
       }
 
-      // Send REAL 4-digit OTP via Resend email service
-      const res = await sendOtpViaResend(cleanEmail, formattedPhone, existing?.name);
+      // Send REAL 4-digit OTP via Resend email service with sanitized real customer name
+      const res = await sendOtpViaResend(cleanEmail, formattedPhone, isRealName ? existing.name.trim() : '');
       if (res.sandboxOtp) {
         setGeneratedOtp(res.sandboxOtp);
       } else {
@@ -142,7 +145,8 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
     const verifyRes = await verifyOtpViaBackend(cleanEmail, formattedPhone, enteredOtp, customerName);
     if (verifyRes.success && verifyRes.data) {
       saveStoredCustomer(verifyRes.data);
-      if (existingUserFound && existingUserFound.name && existingUserFound.name.trim().length > 0) {
+      const hasValidProfileName = existingUserFound?.name && !/^test(\d+)?$/i.test(existingUserFound.name.trim()) && !/^test\s*buyer$/i.test(existingUserFound.name.trim());
+      if (hasValidProfileName) {
         setIsLoading(false);
         onLoginSuccess(verifyRes.data);
         onClose();
@@ -156,7 +160,8 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
 
     // 2. Fallback check for master bypass 2026 or sandbox OTP
     if (enteredOtp === generatedOtp || enteredOtp === '2026') {
-      if (existingUserFound && existingUserFound.name && existingUserFound.name.trim().length > 0) {
+      const hasValidProfileName = existingUserFound?.name && !/^test(\d+)?$/i.test(existingUserFound.name.trim()) && !/^test\s*buyer$/i.test(existingUserFound.name.trim());
+      if (hasValidProfileName) {
         const activeUser: CustomerUser = {
           ...existingUserFound,
           email: cleanEmail,

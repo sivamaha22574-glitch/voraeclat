@@ -38,16 +38,20 @@ export const sendOtp = async (req, res) => {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    // Look up user name if existing
-    let recipientName = name;
-    if (!recipientName) {
+    // Look up user name if existing, strictly filtering out test placeholders
+    let recipientName = name ? name.trim() : '';
+    if (!recipientName || /^test(\d+)?$/i.test(recipientName)) {
       const existing = await User.findOne({
         $or: [
           { email: cleanEmail },
           ...(cleanMobile ? [{ mobile: cleanMobile }] : [])
         ]
       });
-      if (existing?.name) recipientName = existing.name;
+      if (existing?.name && !/^test(\d+)?$/i.test(existing.name.trim())) {
+        recipientName = existing.name.trim();
+      } else {
+        recipientName = 'Customer';
+      }
     }
 
     // Dispatch email via Resend
