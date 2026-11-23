@@ -284,57 +284,30 @@ export default function App() {
       }
     });
 
-    // 2. Fetch live customer orders from MongoDB Atlas and automatically backfill any local orders
+    // 2. Fetch live customer orders from MongoDB
     fetchOrdersFromMongo().then((remoteOrders) => {
-      const localOrders = getStoredOrders();
       if (remoteOrders && remoteOrders.length > 0) {
-        setCustomerOrders(remoteOrders);
+        // Filter out fake or duplicate orders
+        const cleanOrders = remoteOrders.filter((o) => {
+          const isFake = !o.orderId || o.orderId.startsWith('ORD-2852') || o.deliveryAddress?.phone === '+91 9999999999';
+          return !isFake;
+        });
+        setCustomerOrders(cleanOrders);
         try {
-          localStorage.setItem('voraeclat_customer_orders', JSON.stringify(remoteOrders));
+          localStorage.setItem('voraeclat_customer_orders', JSON.stringify(cleanOrders));
           localStorage.removeItem('puppy_shame_customer_orders');
         } catch {
           // ignore
         }
-        // Auto-sync any local orders that might not be in MongoDB Atlas
-        const remoteIds = new Set(remoteOrders.map((o) => o.orderId));
-        localOrders.forEach((lo) => {
-          if (!remoteIds.has(lo.orderId)) {
-            insertOrderToMongo(lo).catch(console.warn);
-          }
-        });
-      } else if (localOrders.length > 0) {
-        // Push all local orders to MongoDB Atlas automatically
-        localOrders.forEach((lo) => {
-          insertOrderToMongo(lo).catch(console.warn);
-        });
       }
     });
 
-    // 3. Periodic background order sync: guarantees all orders in localStorage sync to MongoDB Atlas
-    const orderSyncInterval = setInterval(() => {
-      const localOrders = getStoredOrders();
-      if (localOrders && localOrders.length > 0) {
-        fetchOrdersFromMongo().then((remoteOrders) => {
-          if (remoteOrders) {
-            const remoteIds = new Set(remoteOrders.map((o) => o.orderId));
-            localOrders.forEach((lo) => {
-              if (!remoteIds.has(lo.orderId)) {
-                insertOrderToMongo(lo).catch(console.warn);
-              }
-            });
-          }
-        }).catch(() => {});
-      }
-    }, 15000);
-
-    // 4. Fetch live active coupons from MongoDB Atlas
+    // 3. Fetch live active coupons from MongoDB
     fetchCouponsFromMongo().then((coupons) => {
       if (coupons && coupons.length > 0) {
         setActiveCoupons(coupons);
       }
     });
-
-    return () => clearInterval(orderSyncInterval);
   }, []);
 
   const handleOpenCustomerLogin = (intent: 'orders' | 'general' | 'checkout' = 'general') => {

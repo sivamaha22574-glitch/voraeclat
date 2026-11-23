@@ -8,7 +8,17 @@ const LEGACY_STORAGE_KEY_CUSTOMER = 'puppy_shame_customer_user';
 const LEGACY_STORAGE_KEY_ORDERS = 'puppy_shame_customer_orders';
 
 // Fake order IDs that should never be shown as real orders
-const FAKE_SAMPLE_ORDER_IDS = new Set(['PS-784291', 'PS-521940', 'PS-310882', 'PS-TEST-999999', 'PS-905290']);
+const FAKE_SAMPLE_ORDER_IDS = new Set([
+  'PS-784291',
+  'PS-521940',
+  'PS-310882',
+  'PS-TEST-999999',
+  'PS-905290',
+  'ORD-285260-999',
+  'ORD-285274-911',
+  'ORD-285281-989',
+  'ORD-285294-406',
+]);
 
 export const getStoredCustomer = (): CustomerUser | null => {
   try {
