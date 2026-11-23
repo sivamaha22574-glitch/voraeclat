@@ -145,7 +145,8 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
     const verifyRes = await verifyOtpViaBackend(cleanEmail, formattedPhone, enteredOtp, customerName);
     if (verifyRes.success && verifyRes.data) {
       saveStoredCustomer(verifyRes.data);
-      const hasValidProfileName = existingUserFound?.name && !/^test(\d+)?$/i.test(existingUserFound.name.trim()) && !/^test\s*buyer$/i.test(existingUserFound.name.trim());
+      const profileName = verifyRes.data.name || existingUserFound?.name || '';
+      const hasValidProfileName = profileName && !/^test(\d+)?$/i.test(profileName.trim()) && !/^test\s*buyer$/i.test(profileName.trim()) && !/^customer$/i.test(profileName.trim());
       if (hasValidProfileName) {
         setIsLoading(false);
         onLoginSuccess(verifyRes.data);
@@ -160,7 +161,8 @@ export const CustomerLoginModal: React.FC<CustomerLoginModalProps> = ({
 
     // 2. Fallback check for master bypass 2026 or sandbox OTP
     if (enteredOtp === generatedOtp || enteredOtp === '2026') {
-      const hasValidProfileName = existingUserFound?.name && !/^test(\d+)?$/i.test(existingUserFound.name.trim()) && !/^test\s*buyer$/i.test(existingUserFound.name.trim());
+      const profileName = existingUserFound?.name || '';
+      const hasValidProfileName = profileName && !/^test(\d+)?$/i.test(profileName.trim()) && !/^test\s*buyer$/i.test(profileName.trim()) && !/^customer$/i.test(profileName.trim());
       if (hasValidProfileName) {
         const activeUser: CustomerUser = {
           ...existingUserFound,

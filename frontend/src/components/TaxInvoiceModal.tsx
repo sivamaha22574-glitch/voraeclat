@@ -82,17 +82,19 @@ export const TaxInvoiceModal: React.FC<TaxInvoiceModalProps> = ({ isOpen, onClos
           year: 'numeric',
         }));
 
-  const customerName = order.customerName || order.deliveryAddress?.name || 'Customer';
-  const customerPhone = order.customerMobile || order.deliveryAddress?.phone || '+91 9876543210';
-  const customerEmail = order.customerEmail || 'customer@voraeclat.com';
+  const customerName = order.customerName || order.deliveryAddress?.name || '';
+  const rawPhone = order.customerMobile || order.deliveryAddress?.phone || '';
+  const customerPhone = rawPhone.includes('9876543210') ? '' : rawPhone;
+  const rawEmail = order.customerEmail || '';
+  const customerEmail = rawEmail.includes('voraeclat.com') ? '' : rawEmail;
 
   const shipAddr = order.deliveryAddress || {
     name: customerName,
     phone: customerPhone,
-    address: '102, Green Park Avenue, Bandra West',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    pincode: '400050',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
   };
 
   const rawSubTotal =

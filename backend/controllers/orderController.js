@@ -87,16 +87,16 @@ export const createOrder = async (req, res) => {
     }
 
     const invoiceNumber = existing?.invoiceNumber || req.body.invoiceNumber || `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    const finalMobile = customerMobile || req.body.customerPhone || (deliveryAddress && deliveryAddress.phone) || existing?.customerMobile || '+91 9999999999';
-    const finalName = customerName || (deliveryAddress && deliveryAddress.name) || existing?.customerName || 'Customer';
+    const finalMobile = customerMobile || req.body.customerPhone || (deliveryAddress && deliveryAddress.phone) || existing?.customerMobile || '';
+    const finalName = customerName || (deliveryAddress && deliveryAddress.name) || existing?.customerName || '';
     const finalEmail = customerEmail || req.body.customerEmail || (deliveryAddress && deliveryAddress.email) || existing?.customerEmail || '';
 
     const finalDeliveryAddress = deliveryAddress || existing?.deliveryAddress || {
       name: finalName,
       phone: finalMobile,
-      address: req.body.customerAddress || 'Address not provided',
-      city: req.body.customerCity || 'Mumbai',
-      pincode: req.body.customerPincode || '400001'
+      address: req.body.customerAddress || '',
+      city: req.body.customerCity || '',
+      pincode: req.body.customerPincode || ''
     };
     const finalTracking = trackingNumber || req.body.tracking || existing?.trackingNumber || `DELHIVERY-${orderId}IN`;
     const finalAwb = awbNumber || req.body.awb || existing?.awbNumber || `DELHIVERY-${orderId}IN`;
@@ -298,15 +298,28 @@ export const getOrderById = async (req, res) => {
 export const getCustomerOrders = async (req, res) => {
   try {
     const { identifier } = req.params;
+    const cleanId = (identifier || '').trim();
+    const cleanDigits = cleanId.replace(/\D/g, '').slice(-10);
+
+    const queryConditions = [
+      { customerEmail: cleanId.toLowerCase() },
+      { 'deliveryAddress.email': cleanId.toLowerCase() }
+    ];
+    if (cleanDigits) {
+      queryConditions.push(
+        { customerMobile: cleanDigits },
+        { customerMobile: `+91 ${cleanDigits}` },
+        { customerMobile: `+91${cleanDigits}` },
+        { customerMobile: { $regex: cleanDigits } },
+        { 'deliveryAddress.phone': { $regex: cleanDigits } }
+      );
+    }
 
     if (isDbConnected) {
       try {
         const orders = await Order.find({
           orderId: { $nin: BLACKLISTED_DUMMY_IDS, $not: /^ORD-2852|^PS-|^TEST/i },
-          $or: [
-            { customerMobile: identifier },
-            { customerEmail: identifier }
-          ]
+          $or: queryConditions
         }).sort({ createdAt: -1 });
 
         return res.json({ success: true, count: orders.length, data: orders });

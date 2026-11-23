@@ -180,6 +180,9 @@ export type DeliveryPendingReason =
 export interface CustomerOrder {
   orderId: string;
   invoiceNumber?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerMobile?: string;
   date: string;
   status: OrderStatus;
   expectedDelivery: string;

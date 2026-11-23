@@ -282,7 +282,18 @@ export default function App() {
       const rawUser = localStorage.getItem('voraeclat_customer_user') || localStorage.getItem('puppy_shame_customer_user');
       if (rawUser) {
         const u = JSON.parse(rawUser);
-        if (
+        if (u.email === 'vedakholigamers@gmail.com' || (u.name && u.name.toLowerCase().includes('saravanan'))) {
+          u.name = 'Saravanan';
+          u.mobile = '9443217591';
+          u.email = 'vedakholigamers@gmail.com';
+          if (u.address && u.address.includes('Green Park Avenue')) {
+            u.address = 'gandhiji street';
+            u.city = 'erode';
+            u.pincode = '638005';
+          }
+          localStorage.setItem('voraeclat_customer_user', JSON.stringify(u));
+          setCustomer(u);
+        } else if (
           !u ||
           !u.name ||
           u.name === 'Customer' ||

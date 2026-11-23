@@ -504,7 +504,39 @@ export async function verifyOtpViaBackend(
 }
 
 export async function fetchCustomerByEmailOrPhone(email: string, phone: string): Promise<CustomerUser | null> {
-  return (await fetchCustomerByPhone(phone)) || null;
+  const cleanPhone = (phone || '').replace(/\D/g, '').slice(-10);
+  const cleanEmail = (email || '').trim().toLowerCase();
+
+  // 1. Try phone first if valid and not dummy
+  if (cleanPhone && cleanPhone !== '9876543210' && cleanPhone !== '9999999999') {
+    const byPhone = await fetchCustomerByPhone(cleanPhone);
+    if (byPhone) return byPhone;
+  }
+
+  // 2. Try email via backend /api/users/find
+  if (cleanEmail) {
+    try {
+      const json = await apiFetch<any>(`/api/users/find?q=${encodeURIComponent(cleanEmail)}`);
+      if (json && json.success && json.data) {
+        const u = json.data;
+        return {
+          mobile: u.phone || u.mobile || '',
+          name: u.name,
+          email: u.email || '',
+          address: u.address || (Array.isArray(u.addresses) ? u.addresses[0]?.address : ''),
+          city: u.city || (Array.isArray(u.addresses) ? u.addresses[0]?.city : ''),
+          pincode: u.pincode || (Array.isArray(u.addresses) ? u.addresses[0]?.pincode : ''),
+          isLoggedIn: true,
+          notifyOffers: Boolean(u.notifyOffers !== false),
+          joinedDate: u.joinedDate || u.createdAt || new Date().toISOString(),
+        };
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return null;
 }
 
 export async function upsertCustomerToMongo(customer: CustomerUser): Promise<boolean> {
@@ -657,6 +689,9 @@ export async function fetchOrdersFromMongo(customerPhone?: string): Promise<Cust
       return json.data.map((o: any): CustomerOrder => ({
         orderId: o.orderId || o.orderNumber || o._id,
         invoiceNumber: o.invoiceNumber,
+        customerName: o.customerName || o.deliveryAddress?.name,
+        customerEmail: o.customerEmail || '',
+        customerMobile: o.customerMobile || o.deliveryAddress?.phone || '',
         date: o.invoiceDate || o.createdAt || o.date || new Date().toISOString(),
         status: o.status || 'Confirmed',
         expectedDelivery: o.expectedDelivery || 'Expected delivery in 2-3 days',
@@ -665,11 +700,11 @@ export async function fetchOrdersFromMongo(customerPhone?: string): Promise<Cust
         courierPartner: o.courierPartner || 'Delhivery',
         courierContact: o.courierContact,
         deliveryAddress: o.deliveryAddress || {
-          name: o.customerName || 'Customer',
+          name: o.customerName || '',
           phone: o.customerMobile || '',
-          address: 'Main Road',
-          city: 'Mumbai',
-          pincode: '400001',
+          address: '',
+          city: '',
+          pincode: '',
         },
         items: (o.items || []).map((it: any) => ({
           productId: it.productId || it.id || 'ps-101',

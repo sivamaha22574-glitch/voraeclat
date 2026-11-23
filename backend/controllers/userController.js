@@ -135,11 +135,14 @@ export const verifyOtp = async (req, res) => {
         user.email = cleanEmail;
         updated = true;
       }
-      if (!user.mobile && cleanMobile) {
+      if (cleanMobile && (user.mobile === '9876543210' || user.mobile === '+91 9876543210' || !user.mobile || cleanMobile !== user.mobile)) {
         user.mobile = cleanMobile;
         updated = true;
+      } else if (user.mobile === '9876543210' || user.mobile === '+91 9876543210') {
+        user.mobile = cleanMobile || '';
+        updated = true;
       }
-      if (name && (!user.name || user.name.startsWith('User-') || user.name.startsWith('Customer-'))) {
+      if (name && (!user.name || user.name.startsWith('User-') || user.name.startsWith('Customer-') || /^test/i.test(user.name))) {
         user.name = name;
         updated = true;
       }
@@ -147,6 +150,8 @@ export const verifyOtp = async (req, res) => {
         await user.save();
       }
     }
+
+    const cleanUserMobile = user.mobile && !user.mobile.includes('9876543210') ? user.mobile : (cleanMobile || '');
 
     res.json({
       success: true,
@@ -156,7 +161,7 @@ export const verifyOtp = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        mobile: user.mobile,
+        mobile: cleanUserMobile,
         role: user.role,
         address: user.addresses?.[0]?.address || user.address || '',
         city: user.addresses?.[0]?.city || user.city || '',
@@ -351,11 +356,13 @@ export const getUsers = async (req, res) => {
 export const getUserByPhone = async (req, res) => {
   try {
     const cleanPhone = decodeURIComponent(req.params.phone).trim();
+    const digits = cleanPhone.replace(/\D/g, '').slice(-10);
     const user = await User.findOne({
       $or: [
         { mobile: cleanPhone },
         { mobile: cleanPhone.replace(/\s+/g, '') },
-        { mobile: cleanPhone.startsWith('+91') ? cleanPhone.replace('+91', '').trim() : `+91 ${cleanPhone}` }
+        { mobile: cleanPhone.startsWith('+91') ? cleanPhone.replace('+91', '').trim() : `+91 ${cleanPhone}` },
+        ...(digits ? [{ mobile: digits }, { mobile: `+91 ${digits}` }] : [])
       ]
     });
 
@@ -363,16 +370,73 @@ export const getUserByPhone = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
+    const cleanUserMobile = user.mobile && !user.mobile.includes('9876543210') ? user.mobile : '';
+    const cleanUserAddr = user.addresses?.[0]?.address || user.address || '';
+    const safeAddr = cleanUserAddr.includes('Green Park Avenue') ? '' : cleanUserAddr;
+
     res.json({
       success: true,
       data: {
         id: user._id,
         name: user.name,
         email: user.email,
-        mobile: user.mobile,
-        address: user.addresses?.[0]?.address || user.address || '',
-        city: user.addresses?.[0]?.city || user.city || '',
-        pincode: user.addresses?.[0]?.pincode || user.pincode || '',
+        mobile: cleanUserMobile,
+        address: safeAddr,
+        city: user.addresses?.[0]?.city || (user.city === 'Mumbai' ? '' : user.city) || '',
+        pincode: user.addresses?.[0]?.pincode || (user.pincode === '400001' ? '' : user.pincode) || '',
+        isLoggedIn: true,
+        notifyOffers: user.notifyOffers,
+        joinedDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '',
+        totalOrders: user.totalOrders || 0,
+        totalSpent: user.totalSpent || 0,
+        clubTier: user.clubTier || 'Standard',
+        isClubMember: user.isClubMember || false
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get customer by email or phone query
+// @route   GET /api/users/find
+// @access  Public
+export const getUserByEmailOrPhone = async (req, res) => {
+  try {
+    const q = decodeURIComponent(req.query.q || req.params.email || req.params.identifier || '').trim();
+    if (!q) return res.status(400).json({ success: false, message: 'Missing query parameter' });
+
+    const digits = q.replace(/\D/g, '').slice(-10);
+    const conditions = [{ email: q.toLowerCase() }];
+    if (digits && digits !== '9876543210' && digits !== '9999999999') {
+      conditions.push(
+        { mobile: digits },
+        { mobile: `+91 ${digits}` },
+        { mobile: `+91${digits}` },
+        { mobile: { $regex: digits } }
+      );
+    }
+
+    const user = await User.findOne({ $or: conditions });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const cleanUserMobile = user.mobile && !user.mobile.includes('9876543210') ? user.mobile : '';
+    const cleanUserAddr = user.addresses?.[0]?.address || user.address || '';
+    const safeAddr = cleanUserAddr.includes('Green Park Avenue') ? '' : cleanUserAddr;
+
+    res.json({
+      success: true,
+      data: {
+        id: user._id,
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        mobile: cleanUserMobile,
+        address: safeAddr,
+        city: user.addresses?.[0]?.city || (user.city === 'Mumbai' ? '' : user.city) || '',
+        pincode: user.addresses?.[0]?.pincode || (user.pincode === '400001' ? '' : user.pincode) || '',
         isLoggedIn: true,
         notifyOffers: user.notifyOffers,
         joinedDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '',
