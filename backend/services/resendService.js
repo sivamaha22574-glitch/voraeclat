@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const RESEND_FROM = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+const RESEND_FROM = process.env.RESEND_FROM_EMAIL || 'noreply@voraeclat.online';
 const SENDER_NAME = process.env.RESEND_FROM_NAME || 'Voraeclat Kids';
 
 const getResendClient = () => {
