@@ -6,21 +6,11 @@ conn.on('ready', () => {
     echo "=== HTML BUNDLE CHECK ==="
     curl -s http://127.0.0.1:5001/ | grep -o 'index-[^"]*\\.js'
 
-    echo "=== USER FIND BY EMAIL ==="
-    curl -s "http://127.0.0.1:5001/api/users/find?q=vedakholigamers@gmail.com"
-    echo ""
+    echo "=== PRODUCT MODAL GIFT BOX TEXT CHECK ==="
+    curl -s http://127.0.0.1:5001/assets/ProductModal-ClBzv8xe.js | grep -o 'Add a [^"]*Gift Box' || echo "Check done"
 
-    echo "=== USER FIND BY MOBILE ==="
-    curl -s "http://127.0.0.1:5001/api/users/find?q=9443217591"
-    echo ""
-
-    echo "=== ORDERS BY EMAIL ==="
-    curl -s "http://127.0.0.1:5001/api/orders/customer/vedakholigamers@gmail.com"
-    echo ""
-
-    echo "=== ORDERS BY MOBILE ==="
-    curl -s "http://127.0.0.1:5001/api/orders/customer/9443217591"
-    echo ""
+    echo "=== CHECK FOR ANY HAY IN FRONTEND ASSETS ==="
+    grep -i "Add a HAY" /home/saravanan/kids/backend/public/assets/*.js || echo "No HAY gift box found!"
   `;
 
   conn.exec(cmd, (err, stream) => {
